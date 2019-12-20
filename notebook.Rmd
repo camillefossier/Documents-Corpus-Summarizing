@@ -46,8 +46,67 @@ On aimerait bien avoir une visu :
 	- on peut le faire en notebook, pas forcément de rapport
 
 ```{r}
-corpus = read.csv("../nyt.csv", sep="\t")
+corpus = read.csv("../nyt.csv", sep="\t", stringsAsFactors=F)
+corpus = corpus[1:10,]
 colnames(corpus)
+```
+
+Detecting named entities
+
+```{r}
+#devtools::install_github("quanteda/spacyr", build_vignettes = FALSE)
+library(spacyr)
+#spacy_install(envname='anaconda3')
+spacy_initialize(model = "en_core_web_sm", refresh_settings=TRUE)
+
+parse_texts = spacy_parse(corpus$texts)
+parse_texts
+```
+
+Printing names that appear more than 2% of the time
+
+```{r}
+persons = parse_texts[parse_texts$entity == "PERSON_B",]
+unique_persons = unique(persons$token)
+persons_distrib = sapply(unique_persons, function(x) sum(persons$token == x))
+
+nb_to_keep = 20
+persons_distrib = sort(persons_distrib, decreasing=T)[1:nb_to_keep]
+```
+
+Working at entity level
+
+```{r}
+# Unused for the moment
+parse_texts_withNP = spacy_parse(corpus$texts, entity = TRUE, nounphrase = TRUE)
+entity_extract(parse_texts_withNP, type = "all")[50:80,]
+```
+
+Building the co-occurence matrix
+
+```{r}
+persons.docs <- lapply(names(persons_distrib),
+                       function(x) persons$doc_id[which(persons$token==x)])
+
+coocc.entities <- matrix(nrow=length(persons_distrib),
+                         ncol=length(persons_distrib))
+
+for (i in 1:(length(persons_distrib)-1)) {
+  coocc.entities[i,i] <- 0
+  for (j in (i+1):length(persons_distrib)) {
+     coocc.entities[i,j] <- length(intersect(persons.docs[[i]], persons.docs[[j]]))
+     coocc.entities[j,i] <- coocc.entities[i,j]
+  }
+}
+
+library(qgraph)
+
+qgraph(coocc.entities,
+       layout="spring",
+       vsize=6,
+       labels=names(persons_distrib),
+       arrows=F)
+
 ```
 
 ```{r}
