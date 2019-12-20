@@ -46,6 +46,44 @@ On aimerait bien avoir une visu :
 	- on peut le faire en notebook, pas forcément de rapport
 
 ```{r}
-print("Harry Potter")
+corpus = read.csv("../nyt.csv", sep="\t")
+colnames(corpus)
+```
+
+```{r}
+# TODO :
+
+  # Phase d'enrichissement des données :
+
+# Reconnaitre les entités nommées pour chaque article ?
+# Afin d'etre en mesure de regrouper les articles par personnes
+# Notebook 2 : Entités nommées
+
+# Partie un peu illustrative pour le notebook :
+# Faire des liens entre les entités les plus fréquentes avec un graphe (qgraph)
+
+# Extraire les thématiques des articles
+# Eventuellement faire du nettoyage ou de l'etiquetage à la main
+
+# Sauvegarder les données enrichies pour nes pas avoir
+# à refaire cette étape d'extraction
+
+  # Phase d'exploitation des données enrichies
+
+# Proposer un moteur de recherche pour trouver des articles avec
+# plusieurs critères
+
+# Proposer des fonctions pour afficher les résultats des recherches.
+
+  # Structure du programme
+
+# On travaille en notebook
+
+# Un notebook enrichissement : Celui-ci
+
+# Un notebook Moteur de recherche + Graphical Display
+
+# Un notebook de test qui utilise justement le moteur de recherche
+
 ```
 
