@@ -47,7 +47,7 @@ On aimerait bien avoir une visu :
 
 ```{r}
 corpus = read.csv("../nyt.csv", sep="\t", stringsAsFactors=F)
-corpus = corpus[1:100,]
+corpus = corpus
 colnames(corpus)
 ```
 
@@ -63,15 +63,27 @@ spacy_initialize(model = "en_core_web_sm", refresh_settings=TRUE)
 Parsing entities and saving them
 
 ```{r}
-# Unused for the moment
-parse_texts = spacy_parse(corpus$texts, entity = TRUE, nounphrase = TRUE)
+parse_texts = list()
+
+n = length(corpus$texts)
+
+for (i in 1:n){
+  text = corpus$texts[i]
+  tmp = spacy_parse(text, entity = TRUE, nounphrase = TRUE)
+  if (nrow(tmp) > 0) tmp$doc_id = paste(c("text", i), collapse="")
+  parse_texts = rbind(parse_texts, tmp)
+  #print(paste(i,n, collapse = " / "))
+}
 entities = entity_extract(parse_texts, type = "all")
-write.csv(entities, file="./data/entities.csv")
+full$doc_id = as.numeric(gsub("text", "", full$doc_id))
+
+write.csv(full, file="./data/full_entities.csv", row.names = F)
 ```
 
 Finding the 20 persons that appears most often
 
 ```{r}
+entities = read.csv("./data/full_entities.csv")
 persons = entities[entities$entity_type == "PERSON",]
 unique_persons = unique(persons$entity)
 persons_distrib = sapply(unique_persons, function(x) sum(persons$entity == x))
