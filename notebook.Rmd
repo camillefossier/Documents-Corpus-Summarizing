@@ -47,7 +47,7 @@ On aimerait bien avoir une visu :
 
 ```{r}
 corpus = read.csv("../nyt.csv", sep="\t", stringsAsFactors=F)
-corpus = corpus[1:10,]
+corpus = corpus[1:100,]
 colnames(corpus)
 ```
 
@@ -85,12 +85,14 @@ entity_extract(parse_texts_withNP, type = "all")[50:80,]
 Building the co-occurence matrix
 
 ```{r}
+# Find in which docs each name appears
 persons.docs <- lapply(names(persons_distrib),
                        function(x) persons$doc_id[which(persons$token==x)])
 
 coocc.entities <- matrix(nrow=length(persons_distrib),
                          ncol=length(persons_distrib))
 
+# Count names that appears in the same docs
 for (i in 1:(length(persons_distrib)-1)) {
   coocc.entities[i,i] <- 0
   for (j in (i+1):length(persons_distrib)) {
