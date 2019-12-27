@@ -45,7 +45,7 @@ On aimerait bien avoir une visu :
 	- faut rendre le truc un peu intéressant.
 	- on peut le faire en notebook, pas forcément de rapport
 
-```{r}
+```{r, eval=FALSE}
 corpus = read.csv("../nyt.csv", sep="\t", stringsAsFactors=F)
 corpus = corpus
 colnames(corpus)
@@ -53,7 +53,7 @@ colnames(corpus)
 
 Detecting named entities
 
-```{r}
+```{r, eval=FALSE}
 #devtools::install_github("quanteda/spacyr", build_vignettes = FALSE)
 library(spacyr)
 #spacy_install(envname='anaconda3')
@@ -62,7 +62,7 @@ spacy_initialize(model = "en_core_web_sm", refresh_settings=TRUE)
 
 Parsing entities and saving them
 
-```{r}
+```{r, eval=FALSE}
 parse_texts = list()
 
 n = length(corpus$texts)
@@ -72,7 +72,7 @@ for (i in 1:n){
   tmp = spacy_parse(text, entity = TRUE, nounphrase = TRUE)
   if (nrow(tmp) > 0) tmp$doc_id = paste(c("text", i), collapse="")
   parse_texts = rbind(parse_texts, tmp)
-  #print(paste(i,n, collapse = " / "))
+  print(paste(i,n, collapse = " / "))
 }
 entities = entity_extract(parse_texts, type = "all")
 full$doc_id = as.numeric(gsub("text", "", full$doc_id))
@@ -84,7 +84,7 @@ write.csv(full, file="./data/full_entities.csv", row.names = F)
 
 Constructing vocabulary
 
-```{r}
+```{r, eval=FALSE}
 library(text2vec)
 #library(stopwords)
 library(tm)
@@ -108,7 +108,7 @@ dtm = create_dtm(iterator, vectorizer)
 
 Extracting topics
 
-```{r}
+```{r, eval=FALSE}
 lda_model = LDA$new(n_topics = 20,
                     doc_topic_prior = 0.1,
                     topic_word_prior = 0.01)
@@ -127,7 +127,7 @@ THE FOLLOWING SHOULD MAYBE GO IN ANOTHER SCRIPT
 
 Finding the 20 persons that appears most often
 
-```{r}
+```{r, eval=FALSE}
 entities = read.csv("./data/full_entities.csv")
 persons = entities[entities$entity_type == "PERSON",]
 unique_persons = unique(persons$entity)
@@ -139,7 +139,7 @@ persons_distrib = sort(persons_distrib, decreasing=T)[1:nb_to_keep]
 
 Building the co-occurence matrix
 
-```{r}
+```{r, eval=FALSE}
 # Find in which docs each name appears
 persons.docs <- lapply(names(persons_distrib),
                        function(x) persons$doc_id[which(persons$token==x)])
@@ -166,7 +166,7 @@ qgraph(coocc.entities,
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 # TODO :
 
   # Phase d'enrichissement des données :
