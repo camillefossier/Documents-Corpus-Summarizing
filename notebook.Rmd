@@ -58,28 +58,26 @@ Detecting named entities
 library(spacyr)
 #spacy_install(envname='anaconda3')
 spacy_initialize(model = "en_core_web_sm", refresh_settings=TRUE)
-
-parse_texts = spacy_parse(corpus$texts)
-parse_texts
 ```
 
-Printing names that appear more than 2% of the time
-
-```{r}
-persons = parse_texts[parse_texts$entity == "PERSON_B",]
-unique_persons = unique(persons$token)
-persons_distrib = sapply(unique_persons, function(x) sum(persons$token == x))
-
-nb_to_keep = 20
-persons_distrib = sort(persons_distrib, decreasing=T)[1:nb_to_keep]
-```
-
-Working at entity level
+Parsing entities and saving them
 
 ```{r}
 # Unused for the moment
-parse_texts_withNP = spacy_parse(corpus$texts, entity = TRUE, nounphrase = TRUE)
-entity_extract(parse_texts_withNP, type = "all")[50:80,]
+parse_texts = spacy_parse(corpus$texts, entity = TRUE, nounphrase = TRUE)
+entities = entity_extract(parse_texts, type = "all")
+write.csv(entities, file="./data/entities.csv")
+```
+
+Finding the 20 persons that appears most often
+
+```{r}
+persons = entities[entities$entity_type == "PERSON",]
+unique_persons = unique(persons$entity)
+persons_distrib = sapply(unique_persons, function(x) sum(persons$entity == x))
+
+nb_to_keep = 20
+persons_distrib = sort(persons_distrib, decreasing=T)[1:nb_to_keep]
 ```
 
 Building the co-occurence matrix
