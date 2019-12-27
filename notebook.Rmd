@@ -80,6 +80,51 @@ full$doc_id = as.numeric(gsub("text", "", full$doc_id))
 write.csv(full, file="./data/full_entities.csv", row.names = F)
 ```
 
+# Topic Modelling
+
+Constructing vocabulary
+
+```{r}
+library(text2vec)
+#library(stopwords)
+library(tm)
+library(dplyr)
+
+# TODO : Clean quotes, etc. : " ' `
+# But maybe above
+
+iterator <- itoken(corpus$texts,
+                   preprocessor=tolower, # replace capital letters
+                   tokenizer=word_tokenizer, # split the text into unigrams
+                   progressbar=TRUE)
+
+stop <- stopwords("english")
+vocabulary <- create_vocabulary(iterator, stopwords = stop)
+vocabulary = vocabulary %>% prune_vocabulary(term_count_min = 10)
+vectorizer <- vocab_vectorizer(vocabulary)
+dtm = create_dtm(iterator, vectorizer)
+
+```
+
+Extracting topics
+
+```{r}
+lda_model = LDA$new(n_topics = 20,
+                    doc_topic_prior = 0.1,
+                    topic_word_prior = 0.01)
+
+doc_topic_distr = lda_model$fit_transform(x = dtm,
+                                          n_iter = 1000,
+                                          convergence_tol = 0.001,
+                                          n_check_convergence = 20,
+                                          progressbar = TRUE)
+
+lda_model$get_top_words(n = 10, lambda = 1)
+
+```
+
+THE FOLLOWING SHOULD MAYBE GO IN ANOTHER SCRIPT
+
 Finding the 20 persons that appears most often
 
 ```{r}
