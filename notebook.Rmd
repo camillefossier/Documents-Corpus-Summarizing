@@ -45,7 +45,7 @@ On aimerait bien avoir une visu :
 	- faut rendre le truc un peu intéressant.
 	- on peut le faire en notebook, pas forcément de rapport
 
-```{r, eval=FALSE}
+```{r}
 corpus = read.csv("../nyt.csv", sep="\t", stringsAsFactors=F)
 corpus = corpus
 colnames(corpus)
@@ -84,7 +84,7 @@ write.csv(full, file="./data/full_entities.csv", row.names = F)
 
 Constructing vocabulary
 
-```{r, eval=FALSE}
+```{r}
 library(text2vec)
 #library(stopwords)
 library(tm)
@@ -96,9 +96,10 @@ library(dplyr)
 iterator <- itoken(corpus$texts,
                    preprocessor=tolower, # replace capital letters
                    tokenizer=word_tokenizer, # split the text into unigrams
-                   progressbar=TRUE)
+                   progressbar=F)
 
 stop <- stopwords("english")
+stop <- c(stop, "mr", "said")
 vocabulary <- create_vocabulary(iterator, stopwords = stop)
 vocabulary = vocabulary %>% prune_vocabulary(term_count_min = 10)
 vectorizer <- vocab_vectorizer(vocabulary)
@@ -108,8 +109,8 @@ dtm = create_dtm(iterator, vectorizer)
 
 Extracting topics
 
-```{r, eval=FALSE}
-lda_model = LDA$new(n_topics = 20,
+```{r}
+lda_model = LDA$new(n_topics = 4,
                     doc_topic_prior = 0.1,
                     topic_word_prior = 0.01)
 
@@ -117,10 +118,22 @@ doc_topic_distr = lda_model$fit_transform(x = dtm,
                                           n_iter = 1000,
                                           convergence_tol = 0.001,
                                           n_check_convergence = 20,
-                                          progressbar = TRUE)
+                                          progressbar = F)
+```
 
-lda_model$get_top_words(n = 10, lambda = 1)
+Trying to put names on topic
 
+```{r}
+# Most relevant words for each topic
+lda_model$get_top_words(n = 15, lambda = 0.4)
+
+# Ploting topics
+lda_model$plot()
+
+# Finding most relevant articles for each topic
+ordered_articles = apply(doc_topic_distr, 2, function(t) order(t, decreasing = T))
+titles = apply(ordered_articles[1:10,], 2, function(a) corpus[a,]$titles)
+titles
 ```
 
 THE FOLLOWING SHOULD MAYBE GO IN ANOTHER SCRIPT

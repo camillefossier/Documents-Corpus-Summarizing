@@ -398,6 +398,9 @@ summary {
 <pre class="r"><code>corpus = read.csv(&quot;../nyt.csv&quot;, sep=&quot;\t&quot;, stringsAsFactors=F)
 corpus = corpus
 colnames(corpus)</code></pre>
+<pre><code>## [1] &quot;dates&quot;                &quot;texts&quot;                &quot;titles&quot;              
+## [4] &quot;principal_classifier&quot; &quot;second_classifier&quot;    &quot;third_classifier&quot;    
+## [7] &quot;week&quot;</code></pre>
 <p>Detecting named entities</p>
 <pre class="r"><code>#devtools::install_github(&quot;quanteda/spacyr&quot;, build_vignettes = FALSE)
 library(spacyr)
@@ -425,10 +428,18 @@ write.csv(full, file=&quot;./data/full_entities.csv&quot;, row.names = F)</code>
 <p>Constructing vocabulary</p>
 <pre class="r"><code>library(text2vec)
 #library(stopwords)
-library(tm)
-library(dplyr)
-
-# TODO : Clean quotes, etc. : &quot; &#39; `
+library(tm)</code></pre>
+<pre><code>## Loading required package: NLP</code></pre>
+<pre class="r"><code>library(dplyr)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;dplyr&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code># TODO : Clean quotes, etc. : &quot; &#39; `
 # But maybe above
 
 iterator &lt;- itoken(corpus$texts,
@@ -437,12 +448,55 @@ iterator &lt;- itoken(corpus$texts,
                    progressbar=TRUE)
 
 stop &lt;- stopwords(&quot;english&quot;)
-vocabulary &lt;- create_vocabulary(iterator, stopwords = stop)
-vocabulary = vocabulary %&gt;% prune_vocabulary(term_count_min = 10)
+stop &lt;- c(stop, &quot;mr&quot;, &quot;said&quot;)
+vocabulary &lt;- create_vocabulary(iterator, stopwords = stop)</code></pre>
+<pre><code>## 
+  |                                                                       
+  |=======                                                          |  10%
+  |                                                                       
+  |=============                                                    |  20%
+  |                                                                       
+  |====================                                             |  30%
+  |                                                                       
+  |==========================                                       |  40%
+  |                                                                       
+  |=================================                                |  50%
+  |                                                                       
+  |=======================================                          |  60%
+  |                                                                       
+  |==============================================                   |  70%
+  |                                                                       
+  |====================================================             |  80%
+  |                                                                       
+  |===========================================================      |  90%
+  |                                                                       
+  |=================================================================| 100%</code></pre>
+<pre class="r"><code>vocabulary = vocabulary %&gt;% prune_vocabulary(term_count_min = 10)
 vectorizer &lt;- vocab_vectorizer(vocabulary)
 dtm = create_dtm(iterator, vectorizer)</code></pre>
+<pre><code>## 
+  |                                                                       
+  |=======                                                          |  10%
+  |                                                                       
+  |=============                                                    |  20%
+  |                                                                       
+  |====================                                             |  30%
+  |                                                                       
+  |==========================                                       |  40%
+  |                                                                       
+  |=================================                                |  50%
+  |                                                                       
+  |=======================================                          |  60%
+  |                                                                       
+  |==============================================                   |  70%
+  |                                                                       
+  |====================================================             |  80%
+  |                                                                       
+  |===========================================================      |  90%
+  |                                                                       
+  |=================================================================| 100%</code></pre>
 <p>Extracting topics</p>
-<pre class="r"><code>lda_model = LDA$new(n_topics = 20,
+<pre class="r"><code>lda_model = LDA$new(n_topics = 4,
                     doc_topic_prior = 0.1,
                     topic_word_prior = 0.01)
 
@@ -450,9 +504,124 @@ doc_topic_distr = lda_model$fit_transform(x = dtm,
                                           n_iter = 1000,
                                           convergence_tol = 0.001,
                                           n_check_convergence = 20,
-                                          progressbar = TRUE)
-
-lda_model$get_top_words(n = 10, lambda = 1)</code></pre>
+                                          progressbar = TRUE)</code></pre>
+<pre><code>## 
+  |                                                                       
+  |                                                                 |   0%
+  |                                                                       
+  |                                                                 |   1%
+  |                                                                       
+  |=                                                                |   1%
+  |                                                                       
+  |=                                                                |   2%
+## INFO [2019-12-28 12:46:44] iter 20 loglikelihood = -24698801.597
+## 
+  |                                                                       
+  |==                                                               |   2%
+  |                                                                       
+  |==                                                               |   3%
+  |                                                                       
+  |==                                                               |   4%
+  |                                                                       
+  |===                                                              |   4%
+## INFO [2019-12-28 12:46:49] iter 40 loglikelihood = -24470638.480
+## 
+  |                                                                       
+  |===                                                              |   5%
+  |                                                                       
+  |====                                                             |   5%
+  |                                                                       
+  |====                                                             |   6%
+## INFO [2019-12-28 12:46:54] iter 60 loglikelihood = -24390848.379
+## 
+  |                                                                       
+  |====                                                             |   7%
+  |                                                                       
+  |=====                                                            |   7%
+  |                                                                       
+  |=====                                                            |   8%
+## INFO [2019-12-28 12:46:59] iter 80 loglikelihood = -24355958.657
+## 
+  |                                                                       
+  |======                                                           |   8%
+  |                                                                       
+  |======                                                           |   9%
+  |                                                                       
+  |======                                                           |  10%
+## INFO [2019-12-28 12:47:04] iter 100 loglikelihood = -24340883.264
+## 
+  |                                                                       
+  |=================================================================| 100%INFO [2019-12-28 12:47:04] early stopping at 100 iteration</code></pre>
+<p>Trying to put names on topic</p>
+<pre class="r"><code># Most relevant words for each topic
+lda_model$get_top_words(n = 15, lambda = 0.4)</code></pre>
+<pre><code>##       [,1]         [,2]     [,3]         [,4]       
+##  [1,] &quot;city&quot;       &quot;like&quot;   &quot;party&quot;      &quot;soviet&quot;   
+##  [2,] &quot;mayor&quot;      &quot;people&quot; &quot;minister&quot;   &quot;gorbachev&quot;
+##  [3,] &quot;york&quot;       &quot;now&quot;    &quot;prime&quot;      &quot;military&quot; 
+##  [4,] &quot;new&quot;        &quot;can&quot;    &quot;elections&quot;  &quot;communist&quot;
+##  [5,] &quot;commission&quot; &quot;even&quot;   &quot;government&quot; &quot;yeltsin&quot;  
+##  [6,] &quot;dinkins&quot;    &quot;one&quot;    &quot;election&quot;   &quot;south&quot;    
+##  [7,] &quot;board&quot;      &quot;many&quot;   &quot;parties&quot;    &quot;union&quot;    
+##  [8,] &quot;council&quot;    &quot;just&quot;   &quot;opposition&quot; &quot;army&quot;     
+##  [9,] &quot;ms&quot;         &quot;much&quot;   &quot;parliament&quot; &quot;united&quot;   
+## [10,] &quot;yesterday&quot;  &quot;years&quot;  &quot;coalition&quot;  &quot;russian&quot;  
+## [11,] &quot;state&quot;      &quot;life&quot;   &quot;political&quot;  &quot;president&quot;
+## [12,] &quot;borough&quot;    &quot;will&quot;   &quot;vote&quot;       &quot;police&quot;   
+## [13,] &quot;city&#39;s&quot;     &quot;world&quot;  &quot;cabinet&quot;    &quot;moscow&quot;   
+## [14,] &quot;governor&quot;   &quot;says&quot;   &quot;democratic&quot; &quot;coup&quot;     
+## [15,] &quot;koch&quot;       &quot;still&quot;  &quot;today&quot;      &quot;african&quot;</code></pre>
+<pre class="r"><code># Ploting topics
+lda_model$plot()</code></pre>
+<pre><code>## Loading required namespace: servr</code></pre>
+<pre class="r"><code># Finding most relevant articles for each topic
+ordered_articles = apply(doc_topic_distr, 2, function(t) order(t, decreasing = T))
+titles = apply(ordered_articles[1:10,], 2, function(a) corpus[a,]$titles)
+titles</code></pre>
+<pre><code>##       [,1]                                                   
+##  [1,] &quot;Shulman Inaugurated as Queens Borough President&quot;      
+##  [2,] &quot;Correction&quot;                                           
+##  [3,] &quot;OFFICIAL KNEW OF INQUIRY&quot;                             
+##  [4,] &quot;METRO DATELINES;&quot;                                     
+##  [5,] &quot;Esposito Wants Jury Disbanded in Inquiry&quot;             
+##  [6,] &quot;CORRECTIONS&quot;                                          
+##  [7,] &quot;Prosecutor to Review Action by Legislator&quot;            
+##  [8,] &quot;Ex-State Senator Disbarred After Tax-Fraud Conviction&quot;
+##  [9,] &quot;Friedman Wins Right To Bail During Appeal&quot;            
+## [10,] &quot;Ferrer Designated as Bronx Borough President&quot;         
+##       [,2]                                                   
+##  [1,] &quot;Communist Primacy in Soviet Union Is Challenged&quot;      
+##  [2,] &quot;Moscow Meeting Held to Forge Non-Communist Alliance&quot;  
+##  [3,] &quot;A Soviet Guess at the New Pecking Order&quot;              
+##  [4,] &quot;Quotation of the Day&quot;                                 
+##  [5,] &quot;THE GIFT OF THE MAGGIE&quot;                               
+##  [6,] &quot;The Czechs Start Over&quot;                                
+##  [7,] &quot;Women at the Top&quot;                                     
+##  [8,] &quot;Prague: Then and When, but Never Now&quot;                 
+##  [9,] &quot;COLONIALISM&#39;S BACK&quot;                                   
+## [10,] &quot;Editorial Notebook; Germany&#39;s Once and Future Capital&quot;
+##       [,3]                                                    
+##  [1,] &quot;Gabon&#39;s Cabinet Resigns&quot;                               
+##  [2,] &quot;Brandt Quits Post&quot;                                     
+##  [3,] &quot;Gandhi Meets Gurkha Group In an Effort to End Violence&quot;
+##  [4,] &quot;Gandhi Leading in Indian Poll&quot;                         
+##  [5,] &quot;Lebanon Education Minister Chosen to Form Government&quot;  
+##  [6,] &quot;Familiar Face Wins in Albania&quot;                         
+##  [7,] &quot;Bhutto Tries to Regain Her Office&quot;                     
+##  [8,] &quot;Israeli Opposition Elects New Leader&quot;                  
+##  [9,] &quot;South African Whites Demand Their Own Bantustan&quot;       
+## [10,] &quot;Managua Party Chief Splits From Coalition&quot;             
+##       [,4]                                                                          
+##  [1,] &quot;Former Afghan Chief Is Said to Be Arrested&quot;                                  
+##  [2,] &quot;Afghan Leader Returns&quot;                                                       
+##  [3,] &quot;14th Anniversary of Pinochet&#39;s Government&quot;                                   
+##  [4,] &quot;Ousted From Politburo&quot;                                                       
+##  [5,] &quot;Tuning In to the Kremlin&quot;                                                    
+##  [6,] &quot;Turmoil Continues in Soviet Georgia&quot;                                         
+##  [7,] &quot;Japanese Leaders Await Voters&#39; Verdict&quot;                                      
+##  [8,] &quot;De Klerk and Tutu Talk On Ending Black Strife&quot;                               
+##  [9,] &quot;Romania Jails an Ex-Official Of Secret Police for 7 Years&quot;                   
+## [10,] &quot;Crisis in the Kremlin; Castro Sees Soviets Facing The Dangers of a Civil War&quot;</code></pre>
 <p>THE FOLLOWING SHOULD MAYBE GO IN ANOTHER SCRIPT</p>
 <p>Finding the 20 persons that appears most often</p>
 <pre class="r"><code>entities = read.csv(&quot;./data/full_entities.csv&quot;)
