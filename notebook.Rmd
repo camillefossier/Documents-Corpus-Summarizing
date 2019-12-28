@@ -119,6 +119,10 @@ doc_topic_distr = lda_model$fit_transform(x = dtm,
                                           convergence_tol = 0.001,
                                           n_check_convergence = 20,
                                           progressbar = F)
+
+# TODO : Add topic names in colnames
+
+write.csv(doc_topic_distr, file="./data/topics_probabilities.csv", row.names = F)
 ```
 
 Trying to put names on topic

@@ -14,6 +14,32 @@ utilisant les données du corpus enrichi et la modélisation des thématiques.
 
 ## Evolution des thématiques dans le temps
 
+```{r}
+topics = read.csv("./data/topics_probabilities.csv")
+corpus = read.csv("./data/nyt.csv", sep="\t", stringsAsFactors=F)
+dates = as.POSIXlt(corpus$dates)
+dates$mday = rep(1, length(dates))
+dates$mon = unlist(lapply(dates$mon, function(m) floor(m/4) * 4))
+
+topics_d = topics
+topics_d$dates = unlist(lapply(dates, as.String))
+
+library(dplyr)
+amounts = topics_d %>% 
+  group_by(dates) %>%
+  summarise(t1 = sum(V1),
+            t2 = sum(V2),
+            t3 = sum(V3),
+            t4 = sum(V4))
+amounts$num_dates = as.POSIXlt(amounts$dates)
+
+plot(amounts$num_dates, amounts$t1, type="l", col="red")
+lines(amounts$num_dates, amounts$t2, col="green")
+lines(amounts$num_dates, amounts$t3, col="blue")
+lines(amounts$num_dates, amounts$t4)
+
+```
+
 ## Liens entre certaines entités
 
 Finding the 20 persons that appears most often
@@ -22,7 +48,6 @@ Finding the 20 persons that appears most often
 entities = read.csv("./data/full_entities.csv")
 persons = entities[entities$entity_type == "PERSON",]
 
-library(dplyr)
 full_persons_distrib = persons %>% 
   group_by(entity) %>%
   summarise(distrib = length(entity))
