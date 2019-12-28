@@ -1,0 +1,64 @@
+---
+title: "Text Mining Project - M2 Data Mining"
+author: "FOSSIER Camille - NEBBACHE Nabih"
+date: "20/12/2019"
+output: html_document
+---
+
+# Visualisation du corpus
+
+Ce document a pour objectif de visualiser un peu mieux les données du corpus en
+utilisant les données du corpus enrichi et la modélisation des thématiques.
+
+# Axes de visualisation
+
+## Evolution des thématiques dans le temps
+
+## Liens entre certaines entités
+
+Finding the 20 persons that appears most often
+
+```{r}
+entities = read.csv("./data/full_entities.csv")
+persons = entities[entities$entity_type == "PERSON",]
+
+library(dplyr)
+full_persons_distrib = persons %>% 
+  group_by(entity) %>%
+  summarise(distrib = length(entity))
+
+full_persons_distrib = full_persons_distrib[order(full_persons_distrib$distrib, decreasing = T),]
+full_persons_distrib
+```
+
+Building the co-occurence matrix
+
+```{r}
+nb_to_keep = 20
+persons_distrib = full_persons_distrib[1:nb_to_keep,]
+
+# Find in which docs each name appears
+persons.docs <- lapply(persons_distrib$entity,
+                       function(x) persons$doc_id[which(persons$entity==x)])
+
+coocc.entities <- matrix(nrow=nrow(persons_distrib),
+                         ncol=nrow(persons_distrib))
+
+# Count names that appears in the same docs
+for (i in 1:(nrow(persons_distrib)-1)) {
+  coocc.entities[i,i] <- 0
+  for (j in (i+1):nrow(persons_distrib)) {
+     coocc.entities[i,j] <- length(intersect(persons.docs[[i]], persons.docs[[j]]))
+     coocc.entities[j,i] <- coocc.entities[i,j]
+  }
+}
+
+library(qgraph)
+
+qgraph(coocc.entities,
+       layout="spring",
+       vsize=6,
+       labels=persons_distrib$entity,
+       arrows=F)
+
+```
