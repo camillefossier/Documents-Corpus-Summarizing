@@ -42,7 +42,7 @@ lines(amounts$num_dates, amounts$t4)
 
 ## Liens entre certaines entités
 
-Finding the 20 persons that appears most often
+Keeping only persons and sorting them by appearance
 
 ```{r}
 entities = read.csv("./data/full_entities.csv")
@@ -53,15 +53,43 @@ full_persons_distrib = persons %>%
   summarise(distrib = length(entity))
 
 full_persons_distrib = full_persons_distrib[order(full_persons_distrib$distrib, decreasing = T),]
+```
+
+Removing doubles and keeping the 20 most frequent
+
+```{r}
+nb_to_keep = 20
+
+full_persons_distrib = full_persons_distrib[1:(nb_to_keep * nb_to_keep),]
+n = nrow(full_persons_distrib)
+
+# For every pair, if one is a substring of the other
+# then we keep the most generic
+# Example : "Gorbatchev" and "Mikhail_Gorbatchev" => Only "Gorbatchev"
+for (i in 1:(n - 1)) {
+  fi = full_persons_distrib[i,]
+  for (j in (i+1):n) {
+    fj = full_persons_distrib[j,]
+    if (grepl(fi$entity, fj$entity, fixed = T)) {
+      full_persons_distrib[i,]$distrib = fi$distrib + fj$distrib
+      full_persons_distrib[j,]$distrib = 0
+    }
+    else if (grepl(fj$entity, fi$entity, fixed = T)) {
+      full_persons_distrib[j,]$distrib = fi$distrib + fj$distrib
+      full_persons_distrib[i,]$distrib = 0
+    }
+  }
+}
+
+full_persons_distrib = full_persons_distrib[order(full_persons_distrib$distrib, decreasing = T),]
+persons_distrib = full_persons_distrib[1:nb_to_keep,]
+
 full_persons_distrib
 ```
 
 Building the co-occurence matrix
 
 ```{r}
-nb_to_keep = 20
-persons_distrib = full_persons_distrib[1:nb_to_keep,]
-
 # Find in which docs each name appears
 persons.docs <- lapply(persons_distrib$entity,
                        function(x) persons$doc_id[which(persons$entity==x)])
