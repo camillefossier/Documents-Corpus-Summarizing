@@ -46,7 +46,7 @@ On aimerait bien avoir une visu :
 	- on peut le faire en notebook, pas forcément de rapport
 
 ```{r}
-corpus = read.csv("../nyt.csv", sep="\t", stringsAsFactors=F)
+corpus = read.csv("./data/nyt.csv", sep="\t", stringsAsFactors=F)
 corpus = corpus
 colnames(corpus)
 ```
