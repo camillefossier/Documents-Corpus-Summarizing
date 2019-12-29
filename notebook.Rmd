@@ -47,7 +47,6 @@ On aimerait bien avoir une visu :
 
 ```{r}
 corpus = read.csv("./data/nyt.csv", sep="\t", stringsAsFactors=F)
-corpus = corpus
 colnames(corpus)
 ```
 
@@ -120,8 +119,6 @@ doc_topic_distr = lda_model$fit_transform(x = dtm,
                                           n_check_convergence = 20,
                                           progressbar = F)
 
-# TODO : Add topic names in colnames
-
 write.csv(doc_topic_distr, file="./data/topics_probabilities.csv", row.names = F)
 ```
 
@@ -133,11 +130,6 @@ lda_model$get_top_words(n = 15, lambda = 0.4)
 
 # Ploting topics
 lda_model$plot()
-
-# Finding most relevant articles for each topic
-ordered_articles = apply(doc_topic_distr, 2, function(t) order(t, decreasing = T))
-titles = apply(ordered_articles[1:10,], 2, function(a) corpus[a,]$titles)
-titles
 ```
 
 THE FOLLOWING SHOULD MAYBE GO IN ANOTHER SCRIPT
