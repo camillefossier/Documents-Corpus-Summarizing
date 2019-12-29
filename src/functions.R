@@ -30,10 +30,12 @@ get_dtm_tfidf <- function(dtm) {
 ### BROWSER ###
 ###############
 
+# Splits a string request on whitespaces to make a vector
 make.request <- function(phrase) {
   unlist(strsplit(tolower(phrase), " "))
 }
 
+# Vectorizes request according to existing vocabulary
 vectorize <- function(words, vocab) {
   v <- rep(0, nrow(vocab))
   for (w in words) {
@@ -65,7 +67,9 @@ search <- function(phrase, corpus, vocab, dtm, k=10) {
 
 ###############################################################
 
+# Groups every dates in a vector of POSIX dates, that are in the same trimester
 to_trimestrial_dates <- function(dates) {
+  
   # Setting all days to 1
   dates$mday = rep(1, length(dates))
   
