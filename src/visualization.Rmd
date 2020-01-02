@@ -69,7 +69,7 @@ legend("topright",
 Keeping only persons and sorting them by appearance
 
 ```{r}
-entities = read.csv("./data/full_entities.csv")
+entities = read.csv("../data/full_entities.csv")
 persons = entities[entities$entity_type == "PERSON",]
 
 full_persons_distrib = persons %>% 
