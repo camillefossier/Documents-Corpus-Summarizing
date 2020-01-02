@@ -65,6 +65,14 @@ search <- function(phrase, corpus, vocab, dtm, k=10) {
   ord
 }
 
+# Return indices of dates which are in the range : date_min <= d < date_max
+filter_dates <- function(dates, date_min = NULL, date_max = NULL) {
+  dates = as.Date(dates)
+  if (is.null(date_min)) date_min = min(dates)
+  if (is.null(date_max)) date_max = max(dates)
+  which(date_min <= dates & dates < date_max)
+}
+
 ###############################################################
 
 # Groups every dates in a vector of POSIX dates, that are in the same trimester
