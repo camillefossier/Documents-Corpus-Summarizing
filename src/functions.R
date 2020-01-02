@@ -73,11 +73,17 @@ filter_dates <- function(dates, date_min = NULL, date_max = NULL) {
   which(date_min <= dates & dates < date_max)
 }
 
-filter_entity <- function(entities, type, token, indices=NULL) {
+filter_entity <- function(entities, types=NULL, tokens=NULL, indices=NULL) {
   if (!is.null(indices)) {
-    entities = entities[entities$doc_id == indices,]
+    entities = entities[entities$doc_id %in% indices,]
   }
-  entities[entities$entity == token & entities$entity_type == type,]
+  if (!is.null(types)) {
+    entities = entities[entities$entity_type %in% types,]
+  }
+  if (!is.null(tokens)) {
+    entities = entities[entities$entity %in% tokens,]
+  }
+  entities
 }
 
 ###############################################################
