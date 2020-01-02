@@ -73,6 +73,13 @@ filter_dates <- function(dates, date_min = NULL, date_max = NULL) {
   which(date_min <= dates & dates < date_max)
 }
 
+filter_entity <- function(entities, type, token, indices=NULL) {
+  if (!is.null(indices)) {
+    entities = entities[entities$doc_id == indices,]
+  }
+  entities[entities$entity == token & entities$entity_type == type,]
+}
+
 ###############################################################
 
 # Groups every dates in a vector of POSIX dates, that are in the same trimester
