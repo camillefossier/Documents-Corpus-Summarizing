@@ -17,8 +17,8 @@ utilisant les données du corpus enrichi et la modélisation des thématiques.
 Regardons ce que contiennent les thématiques obtenues :
 
 ```{r}
-topics = read.csv("./data/topics_probabilities.csv")
-corpus = read.csv("./data/nyt.csv", sep="\t", stringsAsFactors=F)
+topics = read.csv("../data/topics_probabilities.csv")
+corpus = read.csv("../data/nyt.csv", sep="\t", stringsAsFactors=F)
 
 # Finding most relevant articles for each topic
 relevant_topic_documents <- function(topics, documents, n=10) {
