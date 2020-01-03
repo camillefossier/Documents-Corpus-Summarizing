@@ -1,1 +1,3 @@
 data/full_entities.csv
+*.RData
+*.Rhistory
