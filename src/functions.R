@@ -69,17 +69,17 @@ search <- function(phrase, corpus, vocab, dtm, k=10) {
 
 
 
-get_doc_matrices <- function(entity_dataset){
+get_doc_matrices <- function(entity_dataset, tfidf=F){
   ent_dataset = entity_dataset[, -2]
-  person_matrix= get_doc_matrix(ent_dataset, "PERSON")
-  event_matrix = get_doc_matrix(ent_dataset, "EVENT")
-  place_matrix = get_doc_matrix(ent_dataset, "GPE")
+  person_matrix= get_doc_matrix(ent_dataset, "PERSON",tfidf)
+  event_matrix = get_doc_matrix(ent_dataset, "EVENT",tfidf)
+  place_matrix = get_doc_matrix(ent_dataset, "GPE",tfidf)
   
   list(PERSON=person_matrix,EVENT=event_matrix, PLACE=place_matrix)
   
 } 
 
-get_doc_matrix <- function(ent_dataset, type){
+get_doc_matrix <- function(ent_dataset, type,tfidf){
   require(Matrix)
   
   num_docs = max(unique(ent_dataset$doc_id))
@@ -93,7 +93,12 @@ get_doc_matrix <- function(ent_dataset, type){
     name = str_split(line[[2]], "\n")[[1]]
     mat[name, line[[1]]] = as.numeric(line[[3]])
   }
-  
+  if(tfidf){
+    count_docs = rowSums(mat >=1)
+    idf = log(ncol(mat) / count_docs)
+    mat = mat * idf
+    
+  }
   res = Matrix(mat,sparse=T)
   res
   
