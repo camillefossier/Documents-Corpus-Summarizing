@@ -114,9 +114,15 @@ get_nearest <- function(index, category, number_of_suggestions, list_of_matrix )
     for(cat in names(list_of_matrix)){
       domain_matrix = list_of_matrix[[cat]]
       suggestions = domain_matrix %*% vec
-      all_names  = rownames(domain_matrix)
-      names = all_names[order(suggestions, decreasing = T)][1:number_of_suggestions]
-      res[[cat]] = names
+      suggestions = suggestions[suggestions != 0]
+      ls = length(suggestions)
+      if (ls ==0){
+        res[[cat]] = c()
+      }else {
+        all_names  = rownames(domain_matrix)
+        names = all_names[order(suggestions, decreasing = T)][1:min(number_of_suggestions,ls) ]
+        res[[cat]] = names
+      }
     }
     return(res)
   }
