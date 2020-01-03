@@ -1,3 +1,7 @@
 data/full_entities.csv
 *.RData
 *.Rhistory
+data/nyt.csv
+data/full_entities.csv
+data/topics_probabilities.csv
+

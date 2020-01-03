@@ -30,10 +30,12 @@ get_dtm_tfidf <- function(dtm) {
 ### BROWSER ###
 ###############
 
+# Splits a string request on whitespaces to make a vector
 make.request <- function(phrase) {
   unlist(strsplit(tolower(phrase), " "))
 }
 
+# Vectorizes request according to existing vocabulary
 vectorize <- function(words, vocab) {
   v <- rep(0, nrow(vocab))
   for (w in words) {
@@ -125,12 +127,41 @@ get_nearest <- function(index, category, number_of_suggestions, list_of_matrix )
       }
     }
     return(res)
+
+  }
+}
+# Return indices of dates which are in the range : date_min <= d < date_max
+filter_dates <- function(dates, date_min = NULL, date_max = NULL) {
+  dates = as.Date(dates)
+  if (is.null(date_min)) date_min = min(dates) else date_min = as.Date(date_min)
+  if (is.null(date_max)) date_max = max(dates) else date_max = as.Date(date_max)
+  which(date_min <= dates & dates < date_max)
+}
+
+filter_entity <- function(entities, types=NULL, tokens=NULL, indices=NULL, entities_only=F) {
+  if (!is.null(indices)) {
+    entities = entities[entities$doc_id %in% indices,]
+  }
+  if (!is.null(types)) {
+    entities = entities[entities$entity_type %in% types,]
+  }
+  if (!is.null(tokens)) {
+    entities = entities[entities$entity %in% tokens,]
+  }
+  
+  if (entities_only) {
+    entities
+  }
+  else {
+    unique(entities$doc_id)
   }
 }
 
 ###############################################################
 
+# Groups every dates in a vector of POSIX dates, that are in the same trimester
 to_trimestrial_dates <- function(dates) {
+  
   # Setting all days to 1
   dates$mday = rep(1, length(dates))
   
@@ -149,5 +180,7 @@ group_by_dates <- function(dataframe, ...) {
     summarise(...)
   amounts
 }
+
+
 
 
