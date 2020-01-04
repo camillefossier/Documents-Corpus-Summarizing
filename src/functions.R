@@ -14,10 +14,17 @@ get_vocabulary <- function(iterator) {
   vocabulary
 }
 
-get_dtm <- function(vocabulary) {
+get_dtm <- function(vocabulary,iterator,tfidf = T) {
+  require(text2vec)
   vectorizer <- vocab_vectorizer(vocabulary)
   dtm = create_dtm(iterator, vectorizer)
-  dtm
+  if(tfidf){
+    tfidf <- TfIdf$new(smooth_idf = TRUE, sublinear_tf = TRUE)
+    res = tfidf$fit_transform(dtm)
+  }else{
+    res = dtm
+  }
+  res
 }
 
 get_dtm_tfidf <- function(dtm) {
