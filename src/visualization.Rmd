@@ -117,8 +117,8 @@ entities_matrices = get_doc_matrices(entities)
 persons = entities_matrices$PERSON
 
 # Keeping persons that appear the most often
-ord = order(rowSums(pers), decreasing = T)
-small_pers = pers[ord[1:20],]
+ord = order(rowSums(persons), decreasing = T)
+small_pers = persons[ord[1:20],]
 
 # Computing cooccurences of people with other people
 cooc = small_pers %*% t(small_pers)
@@ -133,14 +133,14 @@ library(qgraph)
 qgraph(cooc,
        layout="spring",
        vsize=6,
-       labels=dimnames(pers)[[1]][ord[1:20]],
+       labels=dimnames(persons)[[1]][ord[1:20]],
        arrows=F)
 
 ```
 
 Removing doubles and keeping the 20 most frequent
 
-```{r}
+```{r, eval=FALSE}
 
 persons = entities[entities$entity_type == "PERSON",]
 
@@ -183,7 +183,7 @@ full_persons_distrib
 
 Building the co-occurence matrix
 
-```{r}
+```{r, eval=FALSE}
 # Find in which docs each name appears
 persons.docs <- lapply(persons_distrib$entity,
                        function(x) persons$doc_id[which(persons$entity==x)])
@@ -212,7 +212,7 @@ qgraph(cooc,
 
 Searching for articles
 
-```{r}
+```{r, eval=FALSE}
 source("functions.r")
 iterator = get_iterator(corpus$texts)
 vocabulary = get_vocabulary(iterator)
