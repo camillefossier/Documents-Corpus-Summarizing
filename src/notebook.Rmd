@@ -44,17 +44,152 @@ On aimerait bien avoir une visu :
 	- Ex: analyser comment un topic évolue dans le temps
 	- faut rendre le truc un peu intéressant.
 	- on peut le faire en notebook, pas forcément de rapport
+	
+# Importation des librairies 
+```{r}
+library(spacyr)
+library(stringr)
+library(text2vec)
+#library(stopwords)
+library(tm)
+library(dplyr)
+
+source("functions.R")
+```
+
+
+# Extraction du corpus et prétraitement sur ce dernier
+
+## Extraction du corpus
 
 ```{r}
-corpus = read.csv("./data/nyt.csv", sep="\t", stringsAsFactors=F)
+corpus = read.csv("../data/nyt.csv", sep="\t", stringsAsFactors=F)
 colnames(corpus)
 ```
+## Nettoyage des données
+On commence par enlever les colones qui n'ont pas de texte
+```{r}
+
+#On enleve les texte dont le nomber de caractère est égal à 0
+has_text = corpus[str_trim(corpus$texts) != "",]
+
+#Un petit récapitulatif sur la distribution du number de mots dans notre corpus
+l = unlist(lapply(has_text$texts, count_words))
+summary(l)
+hist(l, length(l))
+```
+On remarque que la longueur minimale d'un texte est de 2. Analysons ces textes
+```{r}
+shorts = has_text[l <=25,]
+sl = unlist(lapply(shorts$texts, count_words))
+summary(sl)
+```
+Au dessous de la longeur 25, la taille maximale (par mot) des articles est de 4. Ces articles ne paraissent pas important pour une tache commme la recherche de documents.
+Et on analysant un peu plus, on voit (dans la variable related articles) que  les sujets précedents et suivants n'ont pas de relation.  
+```{r}
+ind = which(l == 3)[3]
+related_articles = has_text[(ind-2):(ind+2)  ,]
+
+```
+Nous allons donc les supprimer.
+```{r}
+has_min_text = has_text[l >= 25,]
+```
+Voyons ce que les autres colones nous dévoilent
+```{r}
+title1 = has_min_text$principal_classifier
+title1[1:10]
+```
+
+Les première valeurs sont similaire pour la colone "principal_classifier". Voyons combien y a-t-il de valeurs distinctes
+```{r}
+dist_title1 = unique(title1)
+length(dist_title1)
+```
+
+Une seule valeur dans cette colone, les articles ont surement été filtrés au préalable ;). On la supprime alors.
+```{r}
+has_min_text1 = has_min_text[, -4]
+colnames(has_min_text1)
+```
+Pour les auters colones ?
+```{r}
+has_min_text1$titles[1:10]
+has_min_text1[1:200, 4:5]
+```
+
+La colone titre parrait interessante. Voyons si on peut enrichire notre texte avec. Nous allons compter le taux de présence de mots de chaque titre par rapport a son texte.  
+```{r}
+rate <- function(x,y){
+  require(sets)
+  x = tolower(x)
+  y = tolower(y)
+  wx <- unlist(word_tokenizer(x))
+  wy <- unlist(word_tokenizer(y))
+  ly = length(wy)
+  inter = intersect(wx,wy)
+  li = length(inter)
+  li/ly
+}
+#test = has_min_text1[1:4,]
+#apply(test,1, function(line) paste(line[[3]], line[[4]], sep =" "))
+
+intersection = apply(has_min_text1, 1, function(line) rate(line[[2]], line[[3]]))
+summary(intersection)
+nas_idx = is.na(intersection)
+```
+
+
+
+
+
+En moyenne, 0.63 des mots présent apparaissent dans le texte, l'autre tier pourrait alors enrichir le texte. Voyons voir ce que sont à peu près ces mots. 
+```{r}
+diff <- function(x,y){
+  require(sets)
+  x = tolower(x)
+  y = tolower(y)
+  wx <- unlist(word_tokenizer(x))
+  wy <- unlist(word_tokenizer(y))
+  setdiff(wy, wx)
+}
+title_only_words = unlist(apply(has_min_text1, 1, function(line) diff(line[[2]], line[[3]])))
+word_count = table(title_only_words)
+sorted_word_count =sort(word_count,decreasing = T)
+sorted_word_count[1:40]
+
+```
+
+Beaucoup de ces mots sont des "stop words". Mais beaucoup aussi sont des mots très significatifs, et puisque nous allons traiter les "stop words" dans la suite, ajouter le titre au texte sera donc bénéfique.
+```{r}
+clean_corpus = has_min_text1
+clean_corpus$texts = apply(clean_corpus,1, function(line) paste(line[[3]], line[[2]], sep =" ."))
+clean_corpus = clean_corpus[,-3]
+```
+
+# Creation d'un vocabulaire et nettoyage par mot
+
+## Creation du vocabulaire
+```{r}
+iterator = get_iterator(clean_corpus$texts)
+vocabulary = get_vocabulary(iterator)
+vocabulary = vocabulary[vocabulary$term_count >5,]
+dim(vocabulary)
+```
+On analyse les mots qui ne sont pas completement alphabetiques
+```{r}
+words = vocabulary$term
+non_alphabetics = words[words %>% str_detect(regex("^[[a-z]|[A-Z]]+$"))]
+```
+
+
+
 
 Detecting named entities
 
 ```{r, eval=FALSE}
 #devtools::install_github("quanteda/spacyr", build_vignettes = FALSE)
-library(spacyr)
+
 #spacy_install(envname='anaconda3')
 spacy_initialize(model = "en_core_web_sm", refresh_settings=TRUE)
 ```
@@ -84,10 +219,7 @@ write.csv(full, file="./data/full_entities.csv", row.names = F)
 Constructing vocabulary
 
 ```{r}
-library(text2vec)
-#library(stopwords)
-library(tm)
-library(dplyr)
+
 
 # TODO : Clean quotes, etc. : " ' `
 # But maybe above
@@ -130,7 +262,7 @@ THE FOLLOWING SHOULD MAYBE GO IN ANOTHER SCRIPT
 Finding the 20 persons that appears most often
 
 ```{r, eval=FALSE}
-entities = read.csv("./data/full_entities.csv")
+entities = read.csv("../data/full_entities.csv")
 persons = entities[entities$entity_type == "PERSON",]
 unique_persons = unique(persons$entity)
 persons_distrib = sapply(unique_persons, function(x) sum(persons$entity == x))

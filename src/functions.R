@@ -8,9 +8,9 @@ get_iterator <- function(documents) {
 
 get_vocabulary <- function(iterator) {
   stop <- stopwords("english")
-  stop <- c(stop, "mr", "said")
+  stop <- c(stop, "mr", "said", "lead")
   vocabulary <- create_vocabulary(iterator, stopwords = stop)
-  vocabulary = vocabulary %>% prune_vocabulary(term_count_min = 10)
+ # vocabulary = vocabulary %>% prune_vocabulary(term_count_min = 10)
   vocabulary
 }
 
@@ -135,6 +135,14 @@ get_nearest <- function(index, category, number_of_suggestions, list_of_matrix )
 
   }
 }
+
+
+
+count_words <- function(x){
+  require(text2vec)
+  length(unlist(word_tokenizer(x)))
+}
+
 # Return indices of dates which are in the range : date_min <= d < date_max
 filter_dates <- function(dates, date_min = NULL, date_max = NULL) {
   dates = as.Date(dates)
