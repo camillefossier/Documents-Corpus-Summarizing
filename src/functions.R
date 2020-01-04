@@ -26,6 +26,13 @@ get_dtm_tfidf <- function(dtm) {
   dtm.tfidf
 }
 
+# Finding most relevant articles for each topic
+relevant_topic_documents <- function(topics, documents, n=10) {
+  ordered_articles = apply(topics, 2, function(t) order(t, decreasing = T))
+  titles = apply(ordered_articles[1:n,], 2, function(a) documents[a])
+  titles
+}
+
 ###############
 ### BROWSER ###
 ###############
@@ -164,11 +171,17 @@ filter_entity <- function(entities, types=NULL, tokens=NULL, indices=NULL, entit
 
 ###############################################################
 
-# Groups every dates in a vector of POSIX dates, that are in the same trimester
-to_trimestrial_dates <- function(dates) {
+to_monthly_dates <- function(dates) {
   
   # Setting all days to 1
   dates$mday = rep(1, length(dates))
+  dates
+}
+
+# Groups every dates in a vector of POSIX dates, that are in the same trimester
+to_trimestrial_dates <- function(dates) {
+  
+  dates = to_monthly_dates(dates)
   
   # Months are stored as a value between 0 and 11
   # We bring them back to a trimestrial value :
