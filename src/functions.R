@@ -5,10 +5,15 @@ dtm_colnames_path = "../data/colnames.csv"
 entities_path = "../data/full_entities.csv"
 topics_path = "../data/topics_probabilities.csv"
 load_dtm <- function(){
-  
+  require(Matrix)
+  mat = readMM(dtm_path)
+  coldata = read.csv2(dtm_colnames_path, row.names = T)
+  cols = coldata[,2]
+  colnames(mat) = cols
+  mat
 }
 
-
+load_dtm()
 
 get_iterator <- function(documents) {
   iterator <- itoken(documents,
