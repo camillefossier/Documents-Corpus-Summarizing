@@ -186,6 +186,8 @@ group_by_dates <- function(dataframe, ...) {
   amounts
 }
 
-
+find_word <- function(word, list_words) {
+  grep(word, list_words, fixed=T)
+}
 
 
