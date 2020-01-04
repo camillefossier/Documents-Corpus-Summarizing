@@ -106,7 +106,42 @@ legend("topright",
 Essayons d'explorer les personnes et les lieux évoqués dans les articles de cette époque :
 
 ```{r}
+# Reading extracted entities
 entities = read.csv("../data/full_entities.csv")
+
+# Only keeping the ones from the filtered dates
+entities = entities[entities$doc_id %in% filtered_dates,]
+
+# Generating matrices of apparition in documents for entities
+entities_matrices = get_doc_matrices(entities)
+persons = entities_matrices$PERSON
+
+# Keeping persons that appear the most often
+ord = order(rowSums(pers), decreasing = T)
+small_pers = pers[ord[1:20],]
+
+# Computing cooccurences of people with other people
+cooc = small_pers %*% t(small_pers)
+
+# Removing self cooccurences
+for (i in 1:nrow(cooc)){
+  cooc[i,i] = 0
+}
+
+# Plot
+library(qgraph)
+qgraph(cooc,
+       layout="spring",
+       vsize=6,
+       labels=dimnames(pers)[[1]][ord[1:20]],
+       arrows=F)
+
+```
+
+Removing doubles and keeping the 20 most frequent
+
+```{r}
+
 persons = entities[entities$entity_type == "PERSON",]
 
 full_persons_distrib = persons %>% 
@@ -114,11 +149,9 @@ full_persons_distrib = persons %>%
   summarise(distrib = length(entity))
 
 full_persons_distrib = full_persons_distrib[order(full_persons_distrib$distrib, decreasing = T),]
-```
 
-Removing doubles and keeping the 20 most frequent
+##
 
-```{r}
 nb_to_keep = 20
 
 full_persons_distrib = full_persons_distrib[1:(nb_to_keep * nb_to_keep),]
@@ -169,7 +202,7 @@ for (i in 1:(nrow(persons_distrib)-1)) {
 
 library(qgraph)
 
-qgraph(coocc.entities,
+qgraph(cooc,
        layout="spring",
        vsize=6,
        labels=persons_distrib$entity,

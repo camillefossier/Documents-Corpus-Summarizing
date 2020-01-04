@@ -88,7 +88,7 @@ get_doc_matrices <- function(entity_dataset, tfidf=F){
 
 get_doc_matrix <- function(ent_dataset, type,tfidf){
   require(Matrix)
-  
+  require(stringr)
   num_docs = max(unique(ent_dataset$doc_id))
   person_data = ent_dataset[ent_dataset$entity_type == type, ]
   person_count = group(person_data)
