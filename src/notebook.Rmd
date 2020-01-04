@@ -235,51 +235,26 @@ write.csv2(data.frame(colnames(dtm)),dtm_colnames_path, row.names = T)
 
 #Detection des entitées nommées
 
+Dans cette partie, on extrait les entités nommées du text. On utilise la librairie Spacy pour cela.
 ```{r, eval=FALSE}
 #devtools::install_github("quanteda/spacyr", build_vignettes = FALSE)
-
 #spacy_install(envname='anaconda3')
 spacy_initialize(model = "en_core_web_sm", refresh_settings=TRUE)
 ```
 
-Parsing entities and saving them
-
+On extrait les entités sur le corpus original, car ayant essayé sur le corpus traité, les résultats sont moins bon.
 ```{r, eval=FALSE}
-parse_texts = list()
 
-n = length(corpus$texts)
+parsed_texts= spacy_parse(corpus$text, entity = TRUE, nounphrase = TRUE)
+entities = entity_extract(parsed_texts, type = "all")
+entities$doc_id = as.numeric(gsub("text", "", entities$doc_id))
+write.csv(entities, file=entities_path, row.names = F)
 
-for (i in 1:n){
-  text = corpus$texts[i]
-  tmp = spacy_parse(text, entity = TRUE, nounphrase = TRUE)
-  if (nrow(tmp) > 0) tmp$doc_id = paste(c("text", i), collapse="")
-  parse_texts = rbind(parse_texts, tmp)
-  print(paste(i,n, collapse = " / "))
-}
-entities = entity_extract(parse_texts, type = "all")
-full$doc_id = as.numeric(gsub("text", "", full$doc_id))
-
-write.csv(full, file="./data/full_entities.csv", row.names = F)
 ```
 
 # Topic Modelling
+Cette partie consiste à affecter à chaque document une probabilité d'appartenir à différents topics. Ces derniers sont composés de plusieurs mots les définissants.
 
-Constructing vocabulary
-
-```{r}
-
-
-# TODO : Clean quotes, etc. : " ' `
-# But maybe above
-
-iterator = get_iterator(corpus$texts)
-
-vocabulary = get_vocabulary(iterator)
-
-dtm = get_dtm(vocabulary)
-```
-
-Extracting topics
 
 ```{r}
 lda_model = LDA$new(n_topics = 4,
@@ -292,7 +267,7 @@ doc_topic_distr = lda_model$fit_transform(x = dtm,
                                           n_check_convergence = 20,
                                           progressbar = F)
 
-write.csv(doc_topic_distr, file="./data/topics_probabilities.csv", row.names = F)
+write.csv(doc_topic_distr, file=topics_path, row.names = F)
 ```
 
 Trying to put names on topic
