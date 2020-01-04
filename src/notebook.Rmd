@@ -47,13 +47,16 @@ On aimerait bien avoir une visu :
 	
 # Importation des librairies 
 ```{r}
+library(Matrix)
+library(sets)
 library(spacyr)
-library(stringr)
 library(text2vec)
 #library(stopwords)
 library(tm)
+library(stringr)
 library(dplyr)
 
+corpus %>% filter(1==1)
 source("functions.R")
 ```
 
@@ -179,13 +182,59 @@ dim(vocabulary)
 On analyse les mots qui ne sont pas completement alphabetiques
 ```{r}
 words = vocabulary$term
-non_alphabetics = words[words %>% str_detect(regex("^[[a-z]|[A-Z]]+$"))]
+non_alphabetics = words[!words %>% str_detect(regex("^[[a-z]|[A-Z]]+$"))]
+
+non_alphabetics[1:100]
+```
+On enleve les chiffres
+```{r}
+num_regex = "^\\d+(,\\d+)*(\\.\\d+)?$"
+non_alph_num= non_alphabetics[!non_alphabetics %>% str_detect(regex(num_regex))]
+non_alph_num[1:100]
+```
+on remarque qu'il ya beacoup de mot du genre ****'s. Enlevons les pour voir ce qui reste
+```{r}
+poss_regex = "^[[a-z][A-Z]]+'s$"
+non_alph_num_poss= non_alph_num[!non_alph_num %>% str_detect(regex(poss_regex))]
+non_alph_num_poss
+```
+Ce qui restent sont soit des initiale ou des mot de classement. 
+Le traitement peut se faire sur les mots qui sont sous la forme *****'s, en séparant le "'s" pour récuperer le mot.
+On eleve les mots ayant une taille de 1 (On pourrait faire plus, mais on risque de perdre de l'information)
+```{r}
+
+poss_regex2 = "^([[a-z][A-Z]']+)'s$"
+
+final_cleaning  <- function(words){
+  res = words %>% str_replace(poss_regex2, "\\1")
+  res[nchar(res) > 1] 
+}
+
+
+chain = clean_corpus$texts %>% tolower %>% word_tokenizer
+achain = lapply(chain, final_cleaning)
+it =  itoken(achain)
+clean_vocab = get_vocabulary(it)
+clean_vocab = clean_vocab[clean_vocab$term_count >5,]
+
+### regroupement des mots similaires
+```
+# Creation de la matrice terme document (en utilisant tfidf) et sauvegarde
+```{r}
+
+dtm_path = "../data/dtm.mtx"
+dtm_colnames_path = "../data/colnames.csv"
+dtm = get_dtm(clean_vocab,it,T)
+writeMM(obj = dtm, file = dtm_path)
+write.csv2(data.frame(colnames(dtm)),dtm_colnames_path, row.names = T)
+
+
 ```
 
 
 
 
-Detecting named entities
+#Detection des entitées nommées
 
 ```{r, eval=FALSE}
 #devtools::install_github("quanteda/spacyr", build_vignettes = FALSE)
