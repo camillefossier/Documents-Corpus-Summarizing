@@ -66,7 +66,7 @@ source("functions.R")
 ## Extraction du corpus
 
 ```{r}
-corpus = read.csv("../data/nyt.csv", sep="\t", stringsAsFactors=F)
+corpus = read.csv(corpus_path, sep="\t", stringsAsFactors=F)
 colnames(corpus)
 ```
 ## Nettoyage des données
@@ -222,8 +222,7 @@ clean_vocab = clean_vocab[clean_vocab$term_count >5,]
 # Creation de la matrice terme document (en utilisant tfidf) et sauvegarde
 ```{r}
 
-dtm_path = "../data/dtm.mtx"
-dtm_colnames_path = "../data/colnames.csv"
+
 dtm = get_dtm(clean_vocab,it,T)
 writeMM(obj = dtm, file = dtm_path)
 write.csv2(data.frame(colnames(dtm)),dtm_colnames_path, row.names = T)
@@ -311,7 +310,7 @@ THE FOLLOWING SHOULD MAYBE GO IN ANOTHER SCRIPT
 Finding the 20 persons that appears most often
 
 ```{r, eval=FALSE}
-entities = read.csv("../data/full_entities.csv")
+entities = read.csv(entities_path)
 persons = entities[entities$entity_type == "PERSON",]
 unique_persons = unique(persons$entity)
 persons_distrib = sapply(unique_persons, function(x) sum(persons$entity == x))

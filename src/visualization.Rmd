@@ -19,8 +19,8 @@ Regardons ce que contiennent les thématiques obtenues :
 ```{r}
 source("functions.R")
 
-topics = read.csv("../data/topics_probabilities.csv")
-corpus = read.csv("../data/nyt.csv", sep="\t", stringsAsFactors=F)
+topics = read.csv(topics_path)
+corpus = read.csv(corpus_path,sep="\t", stringsAsFactors=F)
 
 relevant_docs = relevant_topic_documents(topics, corpus$titles, 30)
 relevant_docs
@@ -107,7 +107,7 @@ Essayons d'explorer les personnes et les lieux évoqués dans les articles de ce
 
 ```{r}
 # Reading extracted entities
-entities = read.csv("../data/full_entities.csv")
+entities = read.csv(entities_path)
 
 # Only keeping the ones from the filtered dates
 entities = entities[entities$doc_id %in% filtered_dates,]

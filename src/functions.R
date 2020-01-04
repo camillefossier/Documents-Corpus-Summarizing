@@ -1,3 +1,15 @@
+
+corpus_path = "../data/nyt.csv"
+dtm_path = "../data/dtm.mtx"
+dtm_colnames_path = "../data/colnames.csv"
+entities_path = "../data/full_entities.csv"
+topics_path = "../data/topics_probabilities.csv"
+load_dtm <- function(){
+  
+}
+
+
+
 get_iterator <- function(documents) {
   iterator <- itoken(documents,
                      preprocessor=tolower, # replace capital letters
