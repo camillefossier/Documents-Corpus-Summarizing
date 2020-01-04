@@ -33,6 +33,13 @@ get_dtm_tfidf <- function(dtm) {
   dtm.tfidf
 }
 
+# Finding most relevant articles for each topic
+relevant_topic_documents <- function(topics, documents, n=10) {
+  ordered_articles = apply(topics, 2, function(t) order(t, decreasing = T))
+  titles = apply(ordered_articles[1:n,], 2, function(a) documents[a])
+  titles
+}
+
 ###############
 ### BROWSER ###
 ###############
@@ -88,7 +95,7 @@ get_doc_matrices <- function(entity_dataset, tfidf=F){
 
 get_doc_matrix <- function(ent_dataset, type,tfidf){
   require(Matrix)
-  
+  require(stringr)
   num_docs = max(unique(ent_dataset$doc_id))
   person_data = ent_dataset[ent_dataset$entity_type == type, ]
   person_count = group(person_data)
@@ -179,11 +186,17 @@ filter_entity <- function(entities, types=NULL, tokens=NULL, indices=NULL, entit
 
 ###############################################################
 
-# Groups every dates in a vector of POSIX dates, that are in the same trimester
-to_trimestrial_dates <- function(dates) {
+to_monthly_dates <- function(dates) {
   
   # Setting all days to 1
   dates$mday = rep(1, length(dates))
+  dates
+}
+
+# Groups every dates in a vector of POSIX dates, that are in the same trimester
+to_trimestrial_dates <- function(dates) {
+  
+  dates = to_monthly_dates(dates)
   
   # Months are stored as a value between 0 and 11
   # We bring them back to a trimestrial value :
@@ -201,6 +214,8 @@ group_by_dates <- function(dataframe, ...) {
   amounts
 }
 
-
+find_word <- function(word, list_words) {
+  grep(word, list_words, fixed=T)
+}
 
 

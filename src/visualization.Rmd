@@ -12,32 +12,32 @@ utilisant les données du corpus enrichi et la modélisation des thématiques.
 
 # Axes de visualisation
 
-## Evolution des thématiques dans le temps
+## Observation des thématiques
 
 Regardons ce que contiennent les thématiques obtenues :
 
 ```{r}
+source("functions.R")
+
 topics = read.csv("../data/topics_probabilities.csv")
 corpus = read.csv("../data/nyt.csv", sep="\t", stringsAsFactors=F)
 
-# Finding most relevant articles for each topic
-relevant_topic_documents <- function(topics, documents, n=10) {
-  ordered_articles = apply(topics, 2, function(t) order(t, decreasing = T))
-  titles = apply(ordered_articles[1:n,], 2, function(a) documents[a])
-  titles
-}
-
-relevant_topic_documents(topics, corpus$titles, 30)
+relevant_docs = relevant_topic_documents(topics, corpus$titles, 30)
+relevant_docs
 ```
 
-On choisit une granularité trimestrielle pour observer les articles
+Les 4 topics enregistrés dans le csv sont donnés à titre d'exemple, mais il serait possible de refaire une extraction de thématiques
+et de réutiliser les outils que nous allons voir par la suite pour mener d'autres analyses.
+
+Choisissons une granularité trimestrielle pour observer les articles. Nous allons donc regarder l'évolution de la
+probabilité d'observer une thématique dans le corpus à chaque trimestre. 
 
 ```{r}
 dates = as.POSIXlt(corpus$dates)
 dates = to_trimestrial_dates(dates)
 
 topics_d = topics
-topics_d$dates = unlist(lapply(dates, as.String))
+topics_d$dates <- unlist(lapply(dates, format))
 
 
 amounts = group_by_dates(topics_d,
@@ -64,12 +64,84 @@ legend("topright",
 
 ```
 
-## Liens entre certaines entités
-
-Keeping only persons and sorting them by appearance
+Entre 1987 et 1990 on observe une forte variation de l'importance du sujet 3. Pour rappel le sujet 3 concernait
+des articles similaires à ceux-ci :
 
 ```{r}
+relevant_docs[,3]
+```
+
+Cette thématique semble toucher à des affaires judiciaires, en effet il est question de "Corrections", de "Fraude", d'"éthique",
+et des mots comme "case" (affaire), "attorney" (avocat), "trial" (procès), confirment cette idée.
+
+Commençons par regarder l'évolution de cette thématique avec une granularité plus fine, par exemple par mois.
+
+```{r}
+filtered_dates = filter_dates(corpus$dates, date_min="1988-01-01", date_max="1990-01-01")
+filtered_topics = topics[filtered_dates, 3]
+
+dates = corpus$dates[filtered_dates]
+dates = to_monthly_dates(as.POSIXlt(dates))
+
+topics_d = data.frame("V3"=filtered_topics)
+topics_d$dates <- unlist(lapply(dates, format))
+
+amounts = group_by_dates(topics_d,
+               t3 = mean(V3))
+
+num_dates = as.POSIXlt(amounts$dates)
+
+plot(num_dates, amounts$t3, col=3, ylim=c(0,1), type="l")
+
+legend("topright",
+       col=3,
+       lty=1,
+       cex=0.8,
+       legend="Topic 3")
+
+```
+
+## Liens entre certaines entités
+
+Essayons d'explorer les personnes et les lieux évoqués dans les articles de cette époque :
+
+```{r}
+# Reading extracted entities
 entities = read.csv("../data/full_entities.csv")
+
+# Only keeping the ones from the filtered dates
+entities = entities[entities$doc_id %in% filtered_dates,]
+
+# Generating matrices of apparition in documents for entities
+entities_matrices = get_doc_matrices(entities)
+persons = entities_matrices$PERSON
+
+# Keeping persons that appear the most often
+ord = order(rowSums(persons), decreasing = T)
+small_pers = persons[ord[1:20],]
+
+# Computing cooccurences of people with other people
+cooc = small_pers %*% t(small_pers)
+
+# Removing self cooccurences
+for (i in 1:nrow(cooc)){
+  cooc[i,i] = 0
+}
+
+# Plot
+library(qgraph)
+qgraph(cooc,
+       layout="spring",
+       vsize=6,
+       labels=dimnames(persons)[[1]][ord[1:20]],
+       arrows=F)
+
+```
+
+Removing doubles and keeping the 20 most frequent
+
+```{r, eval=FALSE}
+
 persons = entities[entities$entity_type == "PERSON",]
 
 full_persons_distrib = persons %>% 
@@ -77,11 +149,9 @@ full_persons_distrib = persons %>%
   summarise(distrib = length(entity))
 
 full_persons_distrib = full_persons_distrib[order(full_persons_distrib$distrib, decreasing = T),]
-```
 
-Removing doubles and keeping the 20 most frequent
+##
 
-```{r}
 nb_to_keep = 20
 
 full_persons_distrib = full_persons_distrib[1:(nb_to_keep * nb_to_keep),]
@@ -113,7 +183,7 @@ full_persons_distrib
 
 Building the co-occurence matrix
 
-```{r}
+```{r, eval=FALSE}
 # Find in which docs each name appears
 persons.docs <- lapply(persons_distrib$entity,
                        function(x) persons$doc_id[which(persons$entity==x)])
@@ -132,7 +202,7 @@ for (i in 1:(nrow(persons_distrib)-1)) {
 
 library(qgraph)
 
-qgraph(coocc.entities,
+qgraph(cooc,
        layout="spring",
        vsize=6,
        labels=persons_distrib$entity,
@@ -142,7 +212,7 @@ qgraph(coocc.entities,
 
 Searching for articles
 
-```{r}
+```{r, eval=FALSE}
 source("functions.r")
 iterator = get_iterator(corpus$texts)
 vocabulary = get_vocabulary(iterator)
