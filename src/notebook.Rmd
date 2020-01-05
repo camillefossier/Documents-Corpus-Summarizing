@@ -255,8 +255,18 @@ On créer à partir de ces entités nommées les matrices qui montrent les relat
 - lieu * document
 - evenement *document
 
+Ces matrices servent à faire la recherche par entitée.
+
 ```{r}
 matrices = get_doc_matrices(entities,T)
+for(mat_name in names(matrices)){
+  mat_path = paste(entity_matrices_root_path,mat_name,".mtx", sep = "")
+  mat_names_path = paste(entity_matrices_root_path, mat_name, ".csv", sep="")
+  mat = matrices[[mat_name]]
+  writeMM(obj = mat, file = mat_path)
+  write.csv2(data.frame(rownames(mat)),mat_names_path, row.names = T)
+
+}
 # save those matrices TODO
 
 ```
