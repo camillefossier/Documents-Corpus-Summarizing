@@ -222,7 +222,6 @@ clean_vocab = clean_vocab[clean_vocab$term_count >5,]
 # Creation de la matrice terme document (en utilisant tfidf) et sauvegarde
 ```{r}
 
-
 dtm = get_dtm(clean_vocab,it,T)
 writeMM(obj = dtm, file = dtm_path)
 write.csv2(data.frame(colnames(dtm)),dtm_colnames_path, row.names = T)
@@ -249,6 +248,16 @@ parsed_texts= spacy_parse(corpus$text, entity = TRUE, nounphrase = TRUE)
 entities = entity_extract(parsed_texts, type = "all")
 entities$doc_id = as.numeric(gsub("text", "", entities$doc_id))
 write.csv(entities, file=entities_path, row.names = F)
+
+```
+On créer à partir de ces entités nommées les matrices qui montrent les relations : 
+- personne * document
+- lieu * document
+- evenement *document
+
+```{r}
+matrices = get_doc_matrices(entities,T)
+# save those matrices TODO
 
 ```
 

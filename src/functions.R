@@ -4,6 +4,11 @@ dtm_path = "../data/dtm.mtx"
 dtm_colnames_path = "../data/colnames.csv"
 entities_path = "../data/full_entities.csv"
 topics_path = "../data/topics_probabilities.csv"
+
+
+
+
+
 load_dtm <- function(){
   require(Matrix)
   mat = readMM(dtm_path)
@@ -186,6 +191,8 @@ get_nearest <- function(index, category, number_of_suggestions, list_of_matrix, 
         res[[cat]] = names
       }
     }
+    
+    #TODO : add articles
     return(res)
 
   }
