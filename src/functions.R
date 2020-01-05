@@ -4,20 +4,41 @@ dtm_path = "../data/dtm.mtx"
 dtm_colnames_path = "../data/colnames.csv"
 entities_path = "../data/full_entities.csv"
 topics_path = "../data/topics_probabilities.csv"
-
+entity_matrices_root_path = "../data/entity_matrices/"
 
 
 
 
 load_dtm <- function(){
-  require(Matrix)
-  mat = readMM(dtm_path)
-  coldata = read.csv2(dtm_colnames_path)
-  cols = coldata[,2]
-  colnames(mat) = cols
+  mat <- read_sparse(dtm_path, dtm_colnames_path)
   mat
 }
 
+read_sparse <- function(mat_path, names_path, row = F) {
+  require(Matrix)
+  mat = readMM(mat_path)
+  names_data = read.csv2(names_path)
+  names = names_data[,2]
+  if(row)
+    rownames(mat) = names
+  else 
+    colnames(mat) = names
+  mat
+}
+
+
+load_entity_matrices <- function(){
+  res = list()
+  files = list.files(entity_matrices_root_path)
+  names = unique( unlist(lapply(files, function(x) str_split(x, "\\.")[[1]][1])))
+  for (name in names) {
+    mat_path = paste(entity_matrices_root_path,name,".mtx", sep="")
+    mat_name_path = paste(entity_matrices_root_path,name,".csv", sep="")
+    mat = read_sparse(mat_path, mat_name_path, row=T)
+    res[[name]] = mat
+  }
+  res
+}
 
 get_iterator <- function(documents) {
   iterator <- itoken(documents,
