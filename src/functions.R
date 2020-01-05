@@ -183,11 +183,10 @@ search_entity <- function(search_expression, category, date_min = NULL, date_max
  search_expression = search_expression %>% tolower
  words = rownames(cat_mat) %>% tolower
  index = search_key_word(search_expression, words)
- print(words[index])
  if(index == 0)
     stop("no match found")
  
- get_nearest(index, category, number_of_suggestions, list_of_matrices, dates)
+ get_nearest(index, category, words[index], number_of_suggestions, list_of_matrices, dates)
  
  
 }
@@ -206,16 +205,18 @@ search_key_word <- function(search_expression, words){
   else 
     return (which.max(vec))
   
-  
-  
 }
-get_nearest <- function(index, category, number_of_suggestions, list_of_matrix, colindexes ) {
+
+
+get_nearest <- function(index, category, name, number_of_suggestions, list_of_matrix, colindexes ) {
   mat = list_of_matrix[[category]][, colindexes]
+  article_vec = list_of_matrix[[category]][index,]
   vec = mat[index,]
   if(sum(vec) == 0)
     return (NULL)
   else {
     res = list()
+    res[["NAME"]] = name
     for(cat in names(list_of_matrix)){
       domain_matrix = list_of_matrix[[cat]][, colindexes]
       suggestions = domain_matrix %*% vec
@@ -233,7 +234,18 @@ get_nearest <- function(index, category, number_of_suggestions, list_of_matrix, 
       }
     }
     
-    #TODO : add articles
+    article_nums = 1:length(article_vec)
+    order = order(article_vec, decreasing = T)
+    article_nums = article_nums[order][colindexes]
+    article_vec = article_vec[order][colindexes]
+    article_vec = article_vec[article_vec != 0]
+    len = length(article_vec)
+    if(!len == 0) {
+      article_nums = article_nums[1:min(number_of_suggestions,len) ]
+      res[["ARTICLES"]] = article_nums
+    }
+  
+    
     return(res)
 
   }
