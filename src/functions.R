@@ -202,7 +202,10 @@ get_nearest <- function(index, category, number_of_suggestions, list_of_matrix, 
     for(cat in names(list_of_matrix)){
       domain_matrix = list_of_matrix[[cat]][, colindexes]
       suggestions = domain_matrix %*% vec
-      suggestions = suggestions[suggestions != 0]
+      mat_rownorms = apply(domain_matrix, 1, function(v) sqrt(sum(v ^ 2)))
+      vec_norm = sqrt(sum(vec^2))
+      suggestions = suggestions / (mat_rownorms * vec_norm)
+      suggestions = suggestions[suggestions != 0 & is.finite(suggestions)]
       ls = length(suggestions)
       if (ls ==0){
         res[[cat]] = c()
