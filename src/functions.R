@@ -7,13 +7,12 @@ topics_path = "../data/topics_probabilities.csv"
 load_dtm <- function(){
   require(Matrix)
   mat = readMM(dtm_path)
-  coldata = read.csv2(dtm_colnames_path, row.names = T)
+  coldata = read.csv2(dtm_colnames_path)
   cols = coldata[,2]
   colnames(mat) = cols
   mat
 }
 
-load_dtm()
 
 get_iterator <- function(documents) {
   iterator <- itoken(documents,
@@ -142,15 +141,40 @@ group <- function(dataset) {
   
 }
 
-get_nearest <- function(index, category, number_of_suggestions, list_of_matrix ) {
-  mat = list_of_matrix[[category]]
+search <- function(search_expression, category, date_min = NULL, date_max=NULL, number_of_suggestions= 15, list_of_matrices, list_of_dates){
+ dates = filter_dates(list_of_dates, date_min, date_max)
+ if(length(dates) == 0){
+   stop("no articles on those dates")
+ }
+ cat_mat =list_of_matrices[[category]]
+ if(is.null(cat_mat))
+   stop("Not a valid category")
+ 
+ words = rownames(cat_mat)
+ index = search_key_word(search_expression, words)
+ if(index == 0)
+    stop("no match found")
+ 
+ new_matrices_list = list()
+ get_nearest(index, category, number_of_suggestions, list_of_matrices, dates)
+ 
+ 
+}
+
+search_key_word <- function(search_expression, words){
+  #return an index
+  #0 if doesn't match
+  
+}
+get_nearest <- function(index, category, number_of_suggestions, list_of_matrix, colindexes ) {
+  mat = list_of_matrix[[category]][, colindexes]
   vec = mat[index,]
   if(sum(vec) == 0)
     return (NULL)
   else {
     res = list()
     for(cat in names(list_of_matrix)){
-      domain_matrix = list_of_matrix[[cat]]
+      domain_matrix = list_of_matrix[[cat]][, colindexes]
       suggestions = domain_matrix %*% vec
       suggestions = suggestions[suggestions != 0]
       ls = length(suggestions)
