@@ -167,7 +167,7 @@ group <- function(dataset) {
   
 }
 
-search_entity <- function(search_expression, category, date_min = NULL, date_max=NULL, number_of_suggestions= 10, list_of_matrices, list_of_dates){
+search_entity <- function(search_expression, category, date_min = NULL, date_max=NULL, number_of_suggestions= 10, list_of_matrices, list_of_dates= NULL){
  if(is.null(list_of_dates)){
    m = ncol(list_of_matrices[[1]])
    dates = 1:m
