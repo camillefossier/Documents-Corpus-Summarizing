@@ -229,3 +229,17 @@ result = search(
 result
 corpus$titles[result]
 ```
+
+# Recherche par entité. C'est à dire qu'on va recherche dans le texte en spécifiant si ce que nous cherchons est : une personne, un lieu ou un événement.
+```{r}
+ent_mat = load_entity_matrices()
+search_entity("nixon", "PERSON",number_of_suggestions = 10, list_of_matrices = ent_mat)
+
+```
+On peut aussi spécifier une plage de dates. Le resultat change puisque il contextualisé par le temps.
+
+```{r}
+dates = corpus$dates
+search_entity("nixon", "PERSON", number_of_suggestions = 10, list_of_matrices = ent_mat,list_of_dates = dates, date_min = "1991-01-01", date_max = "1999-01-01"  )
+```
+
