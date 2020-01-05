@@ -167,21 +167,26 @@ group <- function(dataset) {
   
 }
 
-search <- function(search_expression, category, date_min = NULL, date_max=NULL, number_of_suggestions= 15, list_of_matrices, list_of_dates){
- dates = filter_dates(list_of_dates, date_min, date_max)
- if(length(dates) == 0){
-   stop("no articles on those dates")
+search_entity <- function(search_expression, category, date_min = NULL, date_max=NULL, number_of_suggestions= 10, list_of_matrices, list_of_dates){
+ if(is.null(list_of_dates)){
+   m = ncol(list_of_matrices[[1]])
+   dates = 1:m
+ }else{
+  dates = filter_dates(list_of_dates, date_min, date_max)
+   if(length(dates) == 0){
+     stop("no articles on those dates")
+   }
  }
  cat_mat =list_of_matrices[[category]]
  if(is.null(cat_mat))
    stop("Not a valid category")
- 
- words = rownames(cat_mat)
+ search_expression = search_expression %>% tolower
+ words = rownames(cat_mat) %>% tolower
  index = search_key_word(search_expression, words)
+ print(words[index])
  if(index == 0)
     stop("no match found")
  
- new_matrices_list = list()
  get_nearest(index, category, number_of_suggestions, list_of_matrices, dates)
  
  
@@ -190,6 +195,18 @@ search <- function(search_expression, category, date_min = NULL, date_max=NULL, 
 search_key_word <- function(search_expression, words){
   #return an index
   #0 if doesn't match
+  key_words = search_expression %>% word_tokenizer
+  vec = rep(0,length(words))
+  for (word in key_words){
+    bool_vec = words %>% str_detect(word)
+    vec = vec + bool_vec
+  }
+  if(max(vec) == 0)
+    return (0)
+  else 
+    return (which.max(vec))
+  
+  
   
 }
 get_nearest <- function(index, category, number_of_suggestions, list_of_matrix, colindexes ) {
@@ -289,5 +306,7 @@ group_by_dates <- function(dataframe, ...) {
 find_word <- function(word, list_words) {
   grep(word, list_words, fixed=T)
 }
+
+
 
 
