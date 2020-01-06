@@ -40,6 +40,8 @@ load_entity_matrices <- function(){
   res
 }
 
+library(text2vec)
+library(stopwords)
 get_iterator <- function(documents) {
   iterator <- itoken(documents,
                      preprocessor=tolower, # replace capital letters
