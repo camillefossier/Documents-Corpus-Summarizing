@@ -19,8 +19,8 @@ Regardons ce que contiennent les thématiques obtenues :
 ```{r}
 source("functions.R")
 
-topics = read.csv(topics_path)
-corpus = read.csv(corpus_path,sep="\t", stringsAsFactors=F)
+topics = read.csv("../data/topics_probabilities.csv")
+corpus = read.csv("../data/nyt.csv", sep="\t", stringsAsFactors=F)
 
 relevant_docs = relevant_topic_documents(topics, corpus$titles, 30)
 relevant_docs
@@ -28,13 +28,6 @@ relevant_docs
 
 Les 4 topics enregistrés dans le csv sont donnés à titre d'exemple, mais il serait possible de refaire une extraction de thématiques
 et de réutiliser les outils que nous allons voir par la suite pour mener d'autres analyses.
-
-Essayons de nommer les 4 thématiques ci-dessus :
-
-- Les deux premières semblent contenir beaucoup de noms de pays différents. La première semble toucher à des affaires militaires. Nous appellerons donc cette catégorie : Conflits internationaux. La seconde semble plus particulièrement toucher à de la politique, donc nous l'appellerons : Politique internationale.
-- La troisième thématique semble toucher à des affaires judiciaires, en effet il est question de "Corrections", de "Fraude", d'"éthique",
-et des mots comme "case" (affaire), "attorney" (avocat), "trial" (procès), confirment cette idée : Justice.
-- Enfin la quatrième concerne de manière évidente des affaires soviétiques : URSS.
 
 Choisissons une granularité trimestrielle pour observer les articles. Nous allons donc regarder l'évolution de la
 probabilité d'observer une thématique dans le corpus à chaque trimestre. 
@@ -64,18 +57,27 @@ legend("topright",
        col=(1:4),
        lty=1,
        cex=0.8,
-       legend=c("Conflits internationaux",
-                "Politique internationale",
-                "Justice",
-                "URSS"))
+       legend=c("Topic 1",
+                "Topic 2",
+                "Topic 3",
+                "Topic 4"))
 
 ```
 
-Entre 1987 et 1990 on observe une forte variation de l'importance du sujet 3.
+Entre 1987 et 1990 on observe une forte variation de l'importance du sujet 3. Pour rappel le sujet 3 concernait
+des articles similaires à ceux-ci :
+
+```{r}
+relevant_docs[,3]
+```
+
+Cette thématique semble toucher à des affaires judiciaires, en effet il est question de "Corrections", de "Fraude", d'"éthique",
+et des mots comme "case" (affaire), "attorney" (avocat), "trial" (procès), confirment cette idée.
 
 Commençons par regarder l'évolution de cette thématique avec une granularité plus fine, par exemple par mois.
 
 ```{r}
+# filter_dates returns indices of dates that are between the specified range
 filtered_dates = filter_dates(corpus$dates, date_min="1988-01-01", date_max="1990-01-01")
 filtered_topics = topics[filtered_dates, 3]
 
@@ -106,7 +108,7 @@ Essayons d'explorer les personnes et les lieux évoqués dans les articles de ce
 
 ```{r}
 # Reading extracted entities
-entities = read.csv(entities_path)
+entities = read.csv("../data/full_entities.csv")
 
 # Only keeping the ones from the filtered dates
 entities = entities[entities$doc_id %in% filtered_dates,]
@@ -137,20 +139,26 @@ qgraph(cooc,
 
 ```
 
-On remarque dans la partie supérieure de ce graphique qu'un ensemble de personnes semblent être étroitement reliées.
-Effectuons une recherche dans nos articles pour en apprendre un peu plus sur ces personnes.
+On voit sur ce graphe un ensemble de personnes plus ou moins concernées par les mêmes sujets.
+Concentrons nous sur une poignée d'entre eux, et effectuons une recherche contenant leurs noms pour en apprendre plus sur eux.
 
 ```{r}
-iterator = get_iterator(corpus$texts)
+filtered_corpus = corpus[filtered_dates,]
+
+iterator = get_iterator(filtered_corpus$texts)
 vocabulary = get_vocabulary(iterator)
 dtm = get_dtm(vocabulary, iterator)
-result = search("koch dinkins myerson gabel capasso devincenzo",
-       corpus,
-       vocabulary,
-       dtm)
+dtm.tfidf = get_dtm_tfidf(dtm)
 
-corpus$titles[result]
-corpus$texts[result[1]]
+result = search(
+  "koch dinkins myerson gabel capasso devincenzo",
+  filtered_corpus$texts,
+  vocabulary,
+  dtm.tfidf,
+  k=20
+)
+filtered_corpus$titles[result]
+filtered_corpus$texts[result[1]]
 ```
 
 # Supplémentaire
