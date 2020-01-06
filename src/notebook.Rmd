@@ -233,14 +233,14 @@ write.csv2(data.frame(colnames(dtm)),dtm_colnames_path, row.names = T)
 #Detection des entitées nommées
 
 Dans cette partie, on extrait les entités nommées du text. On utilise la librairie Spacy pour cela.
-```{r, eval=FALSE}
+```{r}
 #devtools::install_github("quanteda/spacyr", build_vignettes = FALSE)
 #spacy_install(envname='anaconda3')
 spacy_initialize(model = "en_core_web_sm", refresh_settings=TRUE)
 ```
 
 On extrait les entités sur le corpus original, car ayant essayé sur le corpus traité, les résultats sont moins bon.
-```{r, eval=FALSE}
+```{r}
 
 parsed_texts= spacy_parse(corpus$text, entity = TRUE, nounphrase = TRUE)
 entities = entity_extract(parsed_texts, type = "all")
