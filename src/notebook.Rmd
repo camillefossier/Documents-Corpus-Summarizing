@@ -6,7 +6,7 @@ output: html_document
 ---
 
 # Importation des librairies 
-```{r}
+```{r, eval=FALSE}
 library(Matrix)
 library(sets)
 library(spacyr)
@@ -25,13 +25,13 @@ source("functions.R")
 
 ## Extraction du corpus
 
-```{r}
+```{r, eval=FALSE}
 corpus = read.csv(corpus_path, sep="\t", stringsAsFactors=F)
 colnames(corpus)
 ```
 ## Nettoyage des données
 On commence par enlever les colones qui n'ont pas de texte
-```{r}
+```{r, eval=FALSE}
 
 #On enleve les texte dont le nomber de caractère est égal à 0
 has_text = corpus[str_trim(corpus$texts) != "",]
@@ -42,47 +42,47 @@ summary(l)
 hist(l, length(l))
 ```
 On remarque que la longueur minimale d'un texte est de 2. Analysons ces textes
-```{r}
+```{r, eval=FALSE}
 shorts = has_text[l <=25,]
 sl = unlist(lapply(shorts$texts, count_words))
 summary(sl)
 ```
 Au dessous de la longeur 25, la taille maximale (par mot) des articles est de 4. Ces articles ne paraissent pas important pour une tache commme la recherche de documents.
 Et on analysant un peu plus, on voit (dans la variable related articles) que  les sujets précedents et suivants n'ont pas de relation.  
-```{r}
+```{r, eval=FALSE}
 ind = which(l == 3)[3]
 related_articles = has_text[(ind-2):(ind+2)  ,]
 
 ```
 Nous allons donc les supprimer.
-```{r}
+```{r, eval=FALSE}
 has_min_text = has_text[l >= 25,]
 ```
 Voyons ce que les autres colones nous dévoilent
-```{r}
+```{r, eval=FALSE}
 title1 = has_min_text$principal_classifier
 title1[1:10]
 ```
 
 Les première valeurs sont similaire pour la colone "principal_classifier". Voyons combien y a-t-il de valeurs distinctes
-```{r}
+```{r, eval=FALSE}
 dist_title1 = unique(title1)
 length(dist_title1)
 ```
 
 Une seule valeur dans cette colone, les articles ont surement été filtrés au préalable ;). On la supprime alors.
-```{r}
+```{r, eval=FALSE}
 has_min_text1 = has_min_text[, -4]
 colnames(has_min_text1)
 ```
 Pour les auters colones ?
-```{r}
+```{r, eval=FALSE}
 has_min_text1$titles[1:10]
 has_min_text1[1:200, 4:5]
 ```
 
 La colone titre parrait interessante. Voyons si on peut enrichire notre texte avec. Nous allons compter le taux de présence de mots de chaque titre par rapport a son texte.  
-```{r}
+```{r, eval=FALSE}
 rate <- function(x,y){
   require(sets)
   x = tolower(x)
@@ -107,7 +107,7 @@ nas_idx = is.na(intersection)
 
 
 En moyenne, 0.63 des mots présent apparaissent dans le texte, l'autre tier pourrait alors enrichir le texte. Voyons voir ce que sont à peu près ces mots. 
-```{r}
+```{r, eval=FALSE}
 diff <- function(x,y){
   require(sets)
   x = tolower(x)
@@ -124,7 +124,7 @@ sorted_word_count[1:40]
 ```
 
 Beaucoup de ces mots sont des "stop words". Mais beaucoup aussi sont des mots très significatifs, et puisque nous allons traiter les "stop words" dans la suite, ajouter le titre au texte sera donc bénéfique.
-```{r}
+```{r, eval=FALSE}
 clean_corpus = has_min_text1
 clean_corpus$texts = apply(clean_corpus,1, function(line) paste(line[[3]], line[[2]], sep =" ."))
 clean_corpus = clean_corpus[,-3]
@@ -133,27 +133,27 @@ clean_corpus = clean_corpus[,-3]
 # Creation d'un vocabulaire et nettoyage par mot
 
 ## Creation du vocabulaire
-```{r}
+```{r, eval=FALSE}
 iterator = get_iterator(clean_corpus$texts)
 vocabulary = get_vocabulary(iterator)
 vocabulary = vocabulary[vocabulary$term_count >5,]
 dim(vocabulary)
 ```
 On analyse les mots qui ne sont pas completement alphabetiques
-```{r}
+```{r, eval=FALSE}
 words = vocabulary$term
 non_alphabetics = words[!words %>% str_detect(regex("^[[a-z]|[A-Z]]+$"))]
 
 non_alphabetics[1:100]
 ```
 On enleve les chiffres
-```{r}
+```{r, eval=FALSE}
 num_regex = "^\\d+(,\\d+)*(\\.\\d+)?$"
 non_alph_num= non_alphabetics[!non_alphabetics %>% str_detect(regex(num_regex))]
 non_alph_num[1:100]
 ```
 on remarque qu'il ya beacoup de mot du genre ****'s. Enlevons les pour voir ce qui reste
-```{r}
+```{r, eval=FALSE}
 poss_regex = "^[[a-z][A-Z]]+'s$"
 non_alph_num_poss= non_alph_num[!non_alph_num %>% str_detect(regex(poss_regex))]
 non_alph_num_poss
@@ -161,7 +161,7 @@ non_alph_num_poss
 Ce qui restent sont soit des initiale ou des mot de classement. 
 Le traitement peut se faire sur les mots qui sont sous la forme *****'s, en séparant le "'s" pour récuperer le mot.
 On eleve les mots ayant une taille de 1 (On pourrait faire plus, mais on risque de perdre de l'information)
-```{r}
+```{r, eval=FALSE}
 
 poss_regex2 = "^([[a-z][A-Z]']+)'s$"
 
@@ -180,7 +180,7 @@ clean_vocab = clean_vocab[clean_vocab$term_count >5,]
 ### regroupement des mots similaires
 ```
 # Creation de la matrice terme document (en utilisant tfidf) et sauvegarde
-```{r}
+```{r, eval=FALSE}
 dtm = get_dtm(clean_vocab,it,F)
 writeMM(obj = dtm, file = dtm_path)
 write.csv2(data.frame(colnames(dtm)),dtm_colnames_path, row.names = T)
@@ -193,14 +193,14 @@ write.csv2(data.frame(colnames(dtm)),dtm_colnames_path, row.names = T)
 #Detection des entitées nommées
 
 Dans cette partie, on extrait les entités nommées du text. On utilise la librairie Spacy pour cela.
-```{r}
+```{r, eval=FALSE}
 #devtools::install_github("quanteda/spacyr", build_vignettes = FALSE)
 #spacy_install(envname='anaconda3')
 spacy_initialize(model = "en_core_web_sm", refresh_settings=TRUE)
 ```
 
 On extrait les entités sur le corpus original, car ayant essayé sur le corpus traité, les résultats sont moins bon.
-```{r}
+```{r, eval=FALSE}
 
 parsed_texts= spacy_parse(corpus$text, entity = TRUE, nounphrase = TRUE)
 entities = entity_extract(parsed_texts, type = "all")
@@ -216,7 +216,7 @@ On créer à partir de ces entités nommées les matrices qui montrent les relat
 Ces matrices servent à faire la recherche par entitée.
 La recherche se fera en extrayant une ligne d'une de ces matrices, ensuite de calculer le cosinus avec toutes les lignes de toutes les autres matrices. On aura au final pour chaque matrice les lignes les plus proches de cette dernière. Et donc pourra voir les lieu qui sont proche d'une personne par exemple.
 
-```{r}
+```{r, eval=FALSE}
 matrices = get_doc_matrices(entities,F)
 for(mat_name in names(matrices)){
   mat_path = paste(entity_matrices_root_path,mat_name,".mtx", sep = "")
@@ -234,7 +234,7 @@ Cette partie consiste à affecter à chaque document une probabilité d'apparten
 On utilise la methode LDA
 
 
-```{r}
+```{r, eval=FALSE}
 lda_corpus = read.csv(corpus_path, sep="\t", stringsAsFactors=F)
 iterator <- get_iterator(lda_corpus$texts)
 dtm <- get_dtm(vocabulary,iterator,tfidf = F) 
@@ -253,55 +253,10 @@ write.csv(doc_topic_distr, file=topics_path, row.names = F)
 
 Trying to put names on topic
 
-```{r}
+```{r, eval=FALSE}
 # Most relevant words for each topic
 lda_model$get_top_words(n = 30, lambda = 0.4)
 
 # Ploting topics
 lda_model$plot()
 ```
-
-THE FOLLOWING SHOULD MAYBE GO IN ANOTHER SCRIPT
-
-Finding the 20 persons that appears most often
-
-```{r, eval=FALSE}
-entities = read.csv(entities_path)
-persons = entities[entities$entity_type == "PERSON",]
-unique_persons = unique(persons$entity)
-persons_distrib = sapply(unique_persons, function(x) sum(persons$entity == x))
-
-nb_to_keep = 20
-persons_distrib = sort(persons_distrib, decreasing=T)[1:nb_to_keep]
-```
-
-Building the co-occurence matrix
-
-```{r, eval=FALSE}
-# Find in which docs each name appears
-persons.docs <- lapply(names(persons_distrib),
-                       function(x) persons$doc_id[which(persons$token==x)])
-
-coocc.entities <- matrix(nrow=length(persons_distrib),
-                         ncol=length(persons_distrib))
-
-# Count names that appears in the same docs
-for (i in 1:(length(persons_distrib)-1)) {
-  coocc.entities[i,i] <- 0
-  for (j in (i+1):length(persons_distrib)) {
-     coocc.entities[i,j] <- length(intersect(persons.docs[[i]], persons.docs[[j]]))
-     coocc.entities[j,i] <- coocc.entities[i,j]
-  }
-}
-
-library(qgraph)
-
-qgraph(coocc.entities,
-       layout="spring",
-       vsize=6,
-       labels=names(persons_distrib),
-       arrows=F)
-
-```
-
-
