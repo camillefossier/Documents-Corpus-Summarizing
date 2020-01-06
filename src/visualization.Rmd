@@ -29,6 +29,13 @@ relevant_docs
 Les 4 topics enregistrés dans le csv sont donnés à titre d'exemple, mais il serait possible de refaire une extraction de thématiques
 et de réutiliser les outils que nous allons voir par la suite pour mener d'autres analyses.
 
+Essayons de nommer les 4 thématiques ci-dessus :
+
+- Les deux premières semblent contenir beaucoup de noms de pays différents. La première semble toucher à des affaires militaires. Nous appellerons donc cette catégorie : Conflits internationaux. La seconde semble plus particulièrement toucher à de la politique, donc nous l'appellerons : Politique internationale.
+- La troisième thématique semble toucher à des affaires judiciaires, en effet il est question de "Corrections", de "Fraude", d'"éthique",
+et des mots comme "case" (affaire), "attorney" (avocat), "trial" (procès), confirment cette idée : Justice.
+- Enfin la quatrième concerne de manière évidente des affaires soviétiques : URSS.
+
 Choisissons une granularité trimestrielle pour observer les articles. Nous allons donc regarder l'évolution de la
 probabilité d'observer une thématique dans le corpus à chaque trimestre. 
 
@@ -57,22 +64,14 @@ legend("topright",
        col=(1:4),
        lty=1,
        cex=0.8,
-       legend=c("Topic 1",
-                "Topic 2",
-                "Topic 3",
-                "Topic 4"))
+       legend=c("Conflits internationaux",
+                "Politique internationale",
+                "Justice",
+                "URSS"))
 
 ```
 
-Entre 1987 et 1990 on observe une forte variation de l'importance du sujet 3. Pour rappel le sujet 3 concernait
-des articles similaires à ceux-ci :
-
-```{r}
-relevant_docs[,3]
-```
-
-Cette thématique semble toucher à des affaires judiciaires, en effet il est question de "Corrections", de "Fraude", d'"éthique",
-et des mots comme "case" (affaire), "attorney" (avocat), "trial" (procès), confirment cette idée.
+Entre 1987 et 1990 on observe une forte variation de l'importance du sujet 3.
 
 Commençons par regarder l'évolution de cette thématique avec une granularité plus fine, par exemple par mois.
 
@@ -138,99 +137,29 @@ qgraph(cooc,
 
 ```
 
-Removing doubles and keeping the 20 most frequent
+On remarque dans la partie supérieure de ce graphique qu'un ensemble de personnes semblent être étroitement reliées.
+Effectuons une recherche dans nos articles pour en apprendre un peu plus sur ces personnes.
 
-```{r, eval=FALSE}
-
-persons = entities[entities$entity_type == "PERSON",]
-
-full_persons_distrib = persons %>% 
-  group_by(entity) %>%
-  summarise(distrib = length(entity))
-
-full_persons_distrib = full_persons_distrib[order(full_persons_distrib$distrib, decreasing = T),]
-
-##
-
-nb_to_keep = 20
-
-full_persons_distrib = full_persons_distrib[1:(nb_to_keep * nb_to_keep),]
-n = nrow(full_persons_distrib)
-
-# For every pair, if one is a substring of the other
-# then we keep the most generic
-# Example : "Gorbatchev" and "Mikhail_Gorbatchev" => Only "Gorbatchev"
-for (i in 1:(n - 1)) {
-  fi = full_persons_distrib[i,]
-  for (j in (i+1):n) {
-    fj = full_persons_distrib[j,]
-    if (grepl(fi$entity, fj$entity, fixed = T)) {
-      full_persons_distrib[i,]$distrib = fi$distrib + fj$distrib
-      full_persons_distrib[j,]$distrib = 0
-    }
-    else if (grepl(fj$entity, fi$entity, fixed = T)) {
-      full_persons_distrib[j,]$distrib = fi$distrib + fj$distrib
-      full_persons_distrib[i,]$distrib = 0
-    }
-  }
-}
-
-full_persons_distrib = full_persons_distrib[order(full_persons_distrib$distrib, decreasing = T),]
-persons_distrib = full_persons_distrib[1:nb_to_keep,]
-
-full_persons_distrib
-```
-
-Building the co-occurence matrix
-
-```{r, eval=FALSE}
-# Find in which docs each name appears
-persons.docs <- lapply(persons_distrib$entity,
-                       function(x) persons$doc_id[which(persons$entity==x)])
-
-coocc.entities <- matrix(nrow=nrow(persons_distrib),
-                         ncol=nrow(persons_distrib))
-
-# Count names that appears in the same docs
-for (i in 1:(nrow(persons_distrib)-1)) {
-  coocc.entities[i,i] <- 0
-  for (j in (i+1):nrow(persons_distrib)) {
-     coocc.entities[i,j] <- length(intersect(persons.docs[[i]], persons.docs[[j]]))
-     coocc.entities[j,i] <- coocc.entities[i,j]
-  }
-}
-
-library(qgraph)
-
-qgraph(cooc,
-       layout="spring",
-       vsize=6,
-       labels=persons_distrib$entity,
-       arrows=F)
-
-```
-
-Searching for articles
-
-```{r, eval=FALSE}
-source("functions.r")
+```{r}
 iterator = get_iterator(corpus$texts)
 vocabulary = get_vocabulary(iterator)
-dtm = get_dtm(vocabulary)
-dtm.tfidf = get_dtm_tfidf(dtm)
+dtm = get_dtm(vocabulary, iterator)
+result = search("koch dinkins myerson gabel capasso devincenzo",
+       corpus,
+       vocabulary,
+       dtm)
 
-result = search(
-  "soviet gorbatchev russia ussr",
-  corpus$texts,
-  vocabulary,
-  dtm.tfidf,
-  k=20
-)
-result
 corpus$titles[result]
+corpus$texts[result[1]]
 ```
 
-# Recherche par entité. C'est à dire qu'on va recherche dans le texte en spécifiant si ce que nous cherchons est : une personne, un lieu ou un événement.
+# Supplémentaire
+
+## Recherche par entité
+
+On va rechercher dans le texte en spécifiant si ce que nous cherchons est : une personne, un lieu ou un événement.
+Le résultat de ces recherches nous renvoie tous les éléments de contexte autour de l'entité en question.
+
 ```{r}
 ent_mat = load_entity_matrices()
 search_entity("nixon", "PERSON",number_of_suggestions = 10, list_of_matrices = ent_mat)
