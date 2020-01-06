@@ -5,46 +5,6 @@ date: "20/12/2019"
 output: html_document
 ---
 
-# Objectifs du projet et prise de notes
-
-Eventuellement utiliser spacy
-
-Selectionner les entités les plus présentes
-
-Nettoyer : Si on voit que ce qui a été extrait est pas fou
-
-Dans les meta information y'a des noms de personnes et des thématiques
-
-Pareil, on peut faire du nettoyage dans les thématiques
-
-L'étiquetage de topics peut etre fait à la main
-
-En gros on veut une version enrichie du dataset
-
-On a la date, le texte, mais on va rajouter des informations :
-
-	- de topic
-	- de personnes
-	- de lieux
-	- etc.
-
-Il faut rajouter une granularité temporelle : anaalyse par mois ? par jour (bof) ?
-
-Si le corpus est gros on peut choisir de s'intéresser à une période particulière
-
-L'idée c'est de fournir un moteur de recherche un peu cool : moi ce qui m'intéresse c'est telle personne, etc
-
-On aimerait bien avoir une visu :
-
-	- par exemple un simple tableau
-	- des graphes : qui relierait des personnes et des lieux par exemple, des topics, etc.
-	- il faut avoir des petites idées
-	- on peut imaginer une visu avant un événement, et après un événement
-	- FAUT PRENDRE EN COMPTE LA DATE POUR FAIRE UNE ANALYSE
-	- Ex: analyser comment un topic évolue dans le temps
-	- faut rendre le truc un peu intéressant.
-	- on peut le faire en notebook, pas forcément de rapport
-	
 # Importation des librairies 
 ```{r}
 library(Matrix)
