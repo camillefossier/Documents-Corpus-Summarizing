@@ -71,11 +71,12 @@ legend("topright",
 
 ```
 
-Entre 1987 et 1990 on observe une forte variation de l'importance du sujet 3.
+Entre 1987 et 1990 on observe une forte variation de l'importance du sujet 3 : Justice.
 
 Commençons par regarder l'évolution de cette thématique avec une granularité plus fine, par exemple par mois.
 
 ```{r}
+# filter_dates returns indices of dates that are between the specified range
 filtered_dates = filter_dates(corpus$dates, date_min="1988-01-01", date_max="1990-01-01")
 filtered_topics = topics[filtered_dates, 3]
 
@@ -133,24 +134,58 @@ qgraph(cooc,
        layout="spring",
        vsize=6,
        labels=dimnames(persons)[[1]][ord[1:20]],
-       arrows=F)
+       arrows=F,
+       color="lightblue")
 
 ```
 
-On remarque dans la partie supérieure de ce graphique qu'un ensemble de personnes semblent être étroitement reliées.
-Effectuons une recherche dans nos articles pour en apprendre un peu plus sur ces personnes.
+On voit sur ce graphe un ensemble de personnes plus ou moins concernées par les mêmes sujets.
+Concentrons nous sur une poignée d'entre eux, et effectuons une recherche contenant leurs noms pour en apprendre plus sur eux.
 
 ```{r}
-iterator = get_iterator(corpus$texts)
+filtered_corpus = corpus[filtered_dates,]
+
+iterator = get_iterator(filtered_corpus$texts)
 vocabulary = get_vocabulary(iterator)
 dtm = get_dtm(vocabulary, iterator)
-result = search("koch dinkins myerson gabel capasso devincenzo",
-       corpus,
-       vocabulary,
-       dtm)
+dtm.tfidf = get_dtm_tfidf(dtm)
 
-corpus$titles[result]
-corpus$texts[result[1]]
+result = search(
+  "koch dinkins myerson gabel capasso devincenzo",
+  filtered_corpus$texts,
+  vocabulary,
+  dtm.tfidf,
+  k=20
+)
+filtered_corpus$titles[result]
+filtered_corpus$texts[result[1]]
+```
+
+Essayons maintenant de regarder les liens entre les personnes et des lieux dans les articles de l'époque :
+
+```{r}
+place = entities_matrices$PLACE
+
+# Keeping persons that appear the most often
+ord_ev = order(rowSums(place), decreasing = T)
+place_pers = rbind(place[ord_ev[1:15],], small_pers[1:15,])
+
+# Computing cooccurences of people with other people
+cooc = place_pers %*% t(place_pers)
+
+# Removing self cooccurences
+for (i in 1:nrow(cooc)){
+  cooc[i,i] = 0
+}
+
+# Plot
+library(qgraph)
+qgraph(cooc,
+       layout="spring",
+       vsize=6,
+       labels=c(dimnames(persons)[[1]][ord[1:15]], dimnames(place)[[1]][ord_ev[1:15]]),
+       arrows=F,
+       color=c(rep("lightblue",15), rep("lightgreen",15)))
 ```
 
 # Supplémentaire
