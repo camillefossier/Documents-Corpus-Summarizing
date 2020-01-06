@@ -5,7 +5,7 @@ dtm_colnames_path = "../data/colnames.csv"
 entities_path = "../data/full_entities.csv"
 topics_path = "../data/topics_probabilities.csv"
 entity_matrices_root_path = "../data/entity_matrices/"
-
+clean_corpus_path = "../data/clean_corpus.csv"
 
 
 
@@ -135,7 +135,7 @@ get_doc_matrices <- function(entity_dataset, tfidf=F){
   
 } 
 
-get_doc_matrix <- function(ent_dataset, type,tfidf){
+get_doc_matrix <- function(ent_dataset, type,tfidf=F){
   require(Matrix)
   require(stringr)
   num_docs = max(unique(ent_dataset$doc_id))
@@ -163,7 +163,7 @@ get_doc_matrix <- function(ent_dataset, type,tfidf){
 group <- function(dataset) {
   dataset %>%
     group_by(doc_id, entity) %>%
-    summarise(num = length(entity))
+    summarise(num = length(entity_type))
   
 }
 
