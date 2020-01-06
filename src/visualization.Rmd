@@ -243,3 +243,9 @@ dates = corpus$dates
 search_entity("nixon", "PERSON", number_of_suggestions = 10, list_of_matrices = ent_mat,list_of_dates = dates, date_min = "1991-01-01", date_max = "1999-01-01"  )
 ```
 
+La même chose peut être faite pour les événements 
+```{r}
+search_entity("bolshevik", "EVENT",number_of_suggestions = 10, list_of_matrices = ent_mat)
+
+```
+
