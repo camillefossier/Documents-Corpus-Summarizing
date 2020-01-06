@@ -19,8 +19,8 @@ Regardons ce que contiennent les thématiques obtenues :
 ```{r}
 source("functions.R")
 
-topics = read.csv("../data/topics_probabilities.csv")
-corpus = read.csv("../data/nyt.csv", sep="\t", stringsAsFactors=F)
+topics = read.csv(topics_path)
+corpus = read.csv(corpus_path,sep="\t", stringsAsFactors=F)
 
 relevant_docs = relevant_topic_documents(topics, corpus$titles, 30)
 relevant_docs
@@ -28,6 +28,13 @@ relevant_docs
 
 Les 4 topics enregistrés dans le csv sont donnés à titre d'exemple, mais il serait possible de refaire une extraction de thématiques
 et de réutiliser les outils que nous allons voir par la suite pour mener d'autres analyses.
+
+Essayons de nommer les 4 thématiques ci-dessus :
+
+- Les deux premières semblent contenir beaucoup de noms de pays différents. La première semble toucher à des affaires militaires. Nous appellerons donc cette catégorie : Conflits internationaux. La seconde semble plus particulièrement toucher à de la politique, donc nous l'appellerons : Politique internationale.
+- La troisième thématique semble toucher à des affaires judiciaires, en effet il est question de "Corrections", de "Fraude", d'"éthique",
+et des mots comme "case" (affaire), "attorney" (avocat), "trial" (procès), confirment cette idée : Justice.
+- Enfin la quatrième concerne de manière évidente des affaires soviétiques : URSS.
 
 Choisissons une granularité trimestrielle pour observer les articles. Nous allons donc regarder l'évolution de la
 probabilité d'observer une thématique dans le corpus à chaque trimestre. 
@@ -57,22 +64,14 @@ legend("topright",
        col=(1:4),
        lty=1,
        cex=0.8,
-       legend=c("Topic 1",
-                "Topic 2",
-                "Topic 3",
-                "Topic 4"))
+       legend=c("Conflits internationaux",
+                "Politique internationale",
+                "Justice",
+                "URSS"))
 
 ```
 
-Entre 1987 et 1990 on observe une forte variation de l'importance du sujet 3. Pour rappel le sujet 3 concernait
-des articles similaires à ceux-ci :
-
-```{r}
-relevant_docs[,3]
-```
-
-Cette thématique semble toucher à des affaires judiciaires, en effet il est question de "Corrections", de "Fraude", d'"éthique",
-et des mots comme "case" (affaire), "attorney" (avocat), "trial" (procès), confirment cette idée.
+Entre 1987 et 1990 on observe une forte variation de l'importance du sujet 3 : Justice.
 
 Commençons par regarder l'évolution de cette thématique avec une granularité plus fine, par exemple par mois.
 
@@ -108,7 +107,7 @@ Essayons d'explorer les personnes et les lieux évoqués dans les articles de ce
 
 ```{r}
 # Reading extracted entities
-entities = read.csv("../data/full_entities.csv")
+entities = read.csv(entities_path)
 
 # Only keeping the ones from the filtered dates
 entities = entities[entities$doc_id %in% filtered_dates,]
@@ -135,7 +134,8 @@ qgraph(cooc,
        layout="spring",
        vsize=6,
        labels=dimnames(persons)[[1]][ord[1:20]],
-       arrows=F)
+       arrows=F,
+       color="lightblue")
 
 ```
 
@@ -159,6 +159,33 @@ result = search(
 )
 filtered_corpus$titles[result]
 filtered_corpus$texts[result[1]]
+```
+
+Essayons maintenant de regarder les liens entre les personnes et des lieux dans les articles de l'époque :
+
+```{r}
+place = entities_matrices$PLACE
+
+# Keeping persons that appear the most often
+ord_ev = order(rowSums(place), decreasing = T)
+place_pers = rbind(place[ord_ev[1:15],], small_pers[1:15,])
+
+# Computing cooccurences of people with other people
+cooc = place_pers %*% t(place_pers)
+
+# Removing self cooccurences
+for (i in 1:nrow(cooc)){
+  cooc[i,i] = 0
+}
+
+# Plot
+library(qgraph)
+qgraph(cooc,
+       layout="spring",
+       vsize=6,
+       labels=c(dimnames(persons)[[1]][ord[1:15]], dimnames(place)[[1]][ord_ev[1:15]]),
+       arrows=F,
+       color=c(rep("lightblue",15), rep("lightgreen",15)))
 ```
 
 # Supplémentaire
