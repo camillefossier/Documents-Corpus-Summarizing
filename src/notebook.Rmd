@@ -50,11 +50,12 @@ On aimerait bien avoir une visu :
 library(Matrix)
 library(sets)
 library(spacyr)
-library(text2vec)
 #library(stopwords)
 library(tm)
 library(stringr)
 library(dplyr)
+library(text2vec)
+
 
 source("functions.R")
 ```
@@ -220,13 +221,11 @@ clean_vocab = clean_vocab[clean_vocab$term_count >5,]
 ```
 # Creation de la matrice terme document (en utilisant tfidf) et sauvegarde
 ```{r}
-
-dtm = get_dtm(clean_vocab,it,T)
+dtm = get_dtm(clean_vocab,it,F)
 writeMM(obj = dtm, file = dtm_path)
 write.csv2(data.frame(colnames(dtm)),dtm_colnames_path, row.names = T)
-
-
 ```
+
 
 
 
@@ -255,9 +254,10 @@ On créer à partir de ces entités nommées les matrices qui montrent les relat
 - evenement *document
 
 Ces matrices servent à faire la recherche par entitée.
+La recherche se fera en extrayant une ligne d'une de ces matrices, ensuite de calculer le cosinus avec toutes les lignes de toutes les autres matrices. On aura au final pour chaque matrice les lignes les plus proches de cette dernière. Et donc pourra voir les lieu qui sont proche d'une personne par exemple.
 
 ```{r}
-matrices = get_doc_matrices(entities,T)
+matrices = get_doc_matrices(entities,F)
 for(mat_name in names(matrices)){
   mat_path = paste(entity_matrices_root_path,mat_name,".mtx", sep = "")
   mat_names_path = paste(entity_matrices_root_path, mat_name, ".csv", sep="")
@@ -266,16 +266,19 @@ for(mat_name in names(matrices)){
   write.csv2(data.frame(rownames(mat)),mat_names_path, row.names = T)
 
 }
-# save those matrices TODO
 
 ```
 
 # Topic Modelling
 Cette partie consiste à affecter à chaque document une probabilité d'appartenir à différents topics. Ces derniers sont composés de plusieurs mots les définissants.
+On utilise la methode LDA
 
 
 ```{r}
-lda_model = LDA$new(n_topics = 4,
+lda_corpus = read.csv(corpus_path, sep="\t", stringsAsFactors=F)
+iterator <- get_iterator(lda_corpus$texts)
+dtm <- get_dtm(vocabulary,iterator,tfidf = F) 
+lda_model = text2vec::LDA$new(n_topics = 4,
                     doc_topic_prior = 0.1,
                     topic_word_prior = 0.01)
 
@@ -292,7 +295,7 @@ Trying to put names on topic
 
 ```{r}
 # Most relevant words for each topic
-lda_model$get_top_words(n = 15, lambda = 0.4)
+lda_model$get_top_words(n = 30, lambda = 0.4)
 
 # Ploting topics
 lda_model$plot()
@@ -341,40 +344,4 @@ qgraph(coocc.entities,
 
 ```
 
-```{r, eval=FALSE}
-# TODO :
-
-  # Phase d'enrichissement des données :
-
-# Reconnaitre les entités nommées pour chaque article ?
-# Afin d'etre en mesure de regrouper les articles par personnes
-# Notebook 2 : Entités nommées
-
-# Partie un peu illustrative pour le notebook :
-# Faire des liens entre les entités les plus fréquentes avec un graphe (qgraph)
-
-# Extraire les thématiques des articles
-# Eventuellement faire du nettoyage ou de l'etiquetage à la main
-
-# Sauvegarder les données enrichies pour nes pas avoir
-# à refaire cette étape d'extraction
-
-  # Phase d'exploitation des données enrichies
-
-# Proposer un moteur de recherche pour trouver des articles avec
-# plusieurs critères
-
-# Proposer des fonctions pour afficher les résultats des recherches.
-
-  # Structure du programme
-
-# On travaille en notebook
-
-# Un notebook enrichissement : Celui-ci
-
-# Un notebook Moteur de recherche + Graphical Display
-
-# Un notebook de test qui utilise justement le moteur de recherche
-
-```
 
